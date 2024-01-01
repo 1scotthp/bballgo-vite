@@ -73,14 +73,36 @@ export interface HeadCell<T> {
   
   // TEAM
   export type TeamStats = {};
+
+ export type TeamsStandingStats = {
+    totalPoints: number,
+    totalOppPoints: number
+    wins: number,
+    losses: number,
+    margin: number
+ }
   
   export type Team = {
     roster: Player[];
+    stats: TeamsStandingStats;
     teamName?: string;
     teamId?: number;
     teamAbbreviation: string;
     teamCity?: string;
     teamConference?: string;
+  };
+
+  // ADD WEIGHTS HERE #1
+export type Weights = {
+    TO: number;
+    OFF_FOUL: number;
+    DEF_FOUL_FLOOR: number;
+    ASSIST: number;
+    POSS_LENGTH: number;
+    USAGE_MULT: number;
+    FREE_THROW: number;
+    STL: number;
+    BLK: number;
   };
   
   export type Player = {
@@ -89,7 +111,7 @@ export interface HeadCell<T> {
     ratings: PlayerRatings;
     team: string;
     contract?: Contract;
-    stats?: PlayerStats;
+    stats: PlayerStats;
     gameByGameStats: PlayerStats[];
     realGames: PlayerStats[];
     age?: number;
@@ -102,64 +124,21 @@ export interface HeadCell<T> {
     date: Date;
     transactionDetail: string;
   };
-  
-  // export type Player = {
-  //   id: number;
-  //   name: string;
-  //   ratings: PlayerRatings;
-  //   team: string;
-  //   contract?: Contract;
-  //   stats: PlayerStats;
-  //   gameByGameStats: PlayerStats[];
-  //   realGames: PlayerStats[];
-  //   age?: number;
-  //   position?: string;
-  // };
-  
-  // export type Contract = {
-  //   id: number;
-  //   playerId: number;
-  //   teamId: number;
-  //   startYear: number;
-  //   endYear: number;
-  //   salaries: {
-  //     [year: number]: number;
-  //   };
-  //   isRookieContract: boolean;
-  //   recentlySigned: boolean;
-  //   noTradeClause: boolean;
-  // };
 
-  
-  export type ScoreBoard = {
-    timeRemaining: number;
-    homeTeam: TeamScoreBoard;
-    awayTeam: TeamScoreBoard;
-    playByPlay: Play[];
-  };
-  
   export type Play = {
     timeRemaining: number;
     outcome: Possession;
     player: Player;
   };
-  
-  // export type Player = {
-  //   id: number;
-  //   name: string;
-  //   ratings: PlayerRatings;
-  //   contract?: Contract;
-  //   stats?: PlayerStats;
-  // };
-  
-  export type TeamScoreBoard = {
-    points: number;
-    timeoutsRemaining: number;
-    fouls: number;
-    players: Record<number, PlayerScoreBoard>;
+
+
+  export type ScoreBoard = {
+    timeRemaining: number;
+    boxScore: { [playerName: string]: PlayerBoxScore };
+    playByPlay: Play[];
   };
   
-  export type PlayerScoreBoard = {
+  export type PlayerBoxScore = {
     name: string;
     points: number;
     offReb: number;
@@ -176,7 +155,17 @@ export interface HeadCell<T> {
     freeThrowsTaken: number;
     freeThrowsMade: number;
     mins: number;
+    teamAbbr: string
   };
+  
+//   export type TeamScoreBoard = {
+//     points: number;
+//     timeoutsRemaining: number;
+//     fouls: number;
+//     players: PlayerScoreBoard[];
+//   };
+  
+
   export type TeamTotalStats = {
     totalPoints: number;
     totalOffReb: number;
@@ -262,7 +251,10 @@ export interface HeadCell<T> {
   export type ShotAttempt = {
     success: boolean;
     type: "two" | "three" | "free";
+    blocked: boolean
   };
+
+
   
   export enum PossessionOutcome {
     Turnover = "Turnover",

@@ -87,7 +87,6 @@ async function parseInputData(inputData: string): Promise<PlayerContract[]> {
             contracts.push(contract);
         }
     }
-
     return contracts
 }
 
@@ -151,7 +150,7 @@ const loadPlayerData = async (contractDict: any) => {
         contract: contractDict[item.player_name],
         realGames: [],
         gameByGameStats: [],
-        }
+      }
         const teamAbbr = item["TEAM_ABBREVIATION"];
         if (!teams[teamAbbr]) {
           teams[teamAbbr] = { teamAbbreviation: teamAbbr, roster: [] };
