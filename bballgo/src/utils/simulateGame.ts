@@ -322,6 +322,7 @@ function simulatePossession(
     }
     const shotResult = simulateShot(
       offensiveTeam,
+      defensiveTeam,
       possessionEndingIndex,
       scoreBoard
     );
@@ -396,20 +397,23 @@ function takeShot(
   player: PlayerRatings,
   shotType: "two" | "three",
   isFoul: boolean,
-  scoreBoard: ScoreBoard
+  scoreBoard: ScoreBoard,
+  fouler: string
 ): "make" | "miss" {
   const foulPenalty = isFoul ? 0.3 : 1;
   if (shotType === "two") {
     if (Math.random() < player.twoPointPercentage * foulPenalty) {
-        scoreBoard.boxScore[player.name].twoPointShotsTaken += 1;
+      scoreBoard.boxScore[player.name].twoPointShotsTaken += 1;
       scoreBoard.boxScore[player.name].twoPointShotsMade += 1;
       scoreBoard.boxScore[player.name].points += 2;
       if (isFoul) {
+        scoreBoard.boxScore[fouler].fouls += 1;
         return takeFreeThrows(player, 1, scoreBoard);
       }
       return "make";
     } else {
       if (isFoul) {
+        scoreBoard.boxScore[fouler].fouls += 1;
         return takeFreeThrows(player, 2, scoreBoard);
       } else {
         scoreBoard.boxScore[player.name].twoPointShotsTaken += 1;
@@ -438,14 +442,17 @@ function takeShot(
 
 function simulateShot(
   offensiveTeam: PlayerRatings[],
+  defensiveTeam: PlayerRatings[],
   possessionEndingIndex: number,
   scoreBoard: ScoreBoard
 ): "make" | "miss" {
   const player = offensiveTeam[possessionEndingIndex];
   const shotType = genShotType(player);
   const isFoul: boolean = genIsFoul(shotType, player);
+  const foulRates = defensiveTeam.map((player) => player.foulRate);
+  const fouler = defensiveTeam[getIndexFromWeights(foulRates)].name
 
-  return takeShot(player, shotType, isFoul, scoreBoard);
+  return takeShot(player, shotType, isFoul, scoreBoard, fouler);
 }
 
 function genDefensiveFoulProb(defensiveTeam: PlayerRatings[]): number {
