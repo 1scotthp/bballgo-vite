@@ -1,5 +1,5 @@
 import { db } from "../db";
-import contractsCSV from '../data/NBA_Player_Data_22_23.csv?url';
+import contractsCSV from '../data/NBA_Contracts_Player.csv?url';
 import playerCSV from "../data/NBA_Player_Data_22_23.csv?url"
 import { Player, PlayerRatings, Team } from "../types/types";
 import csvtojson from 'csvtojson';
@@ -130,6 +130,8 @@ const loadPlayerData = async (contractDict: any) => {
         twoPointAttemptRate:
           (parseFloat(item["FGA/100"]) - parseFloat(item["FG3A/100"])) / 100,
         freeThrowRate: parseFloat(item["FTARate%"]),
+        stealRate: parseFloat(item["STL/100"]) / 100,
+        blockRate: parseFloat(item["BLK/100"]) / 100,
         twoPointPercentage: parseFloat(item["FG2%"]),
         freeThrowPercentage: parseFloat(item["FT%"]),
         threePointPercentage: parseFloat(item["FG3%"]),
@@ -140,15 +142,33 @@ const loadPlayerData = async (contractDict: any) => {
         defensiveReboundRate: parseFloat(item["REB/100"]) / 3,
         assistRate: parseFloat(item["AST/100"]),
         age: parseInt(item.AGE),
-        team: item["TEAM_ABBREVIATION"],
       };
       let player: Player = {
         id: parseInt(item.nba_id),
         name: item.player_name,
-        team: item["TEAM_ABBREVIATION"],
+        teamAbbr: item["TEAM_ABBREVIATION"],
         ratings: ratings,
         contract: contractDict[item.player_name],
         realGames: [],
+        stats: {
+          name: item.player_name,
+          points: 0,
+          offReb: 0,
+          defReb: 0,
+          assists: 0,
+          steals: 0,
+          blocks: 0,
+          turnovers: 0,
+          fouls: 0,
+          twoPointShotsTaken: 0,
+          twoPointShotsMade: 0,
+          threePointShotsTaken: 0,
+          threePointShotsMade: 0,
+          freeThrowsTaken: 0,
+          freeThrowsMade: 0,
+          mins: 0,
+          teamAbbr: item["TEAM_ABBREVIATION"],
+        },
         gameByGameStats: [],
       }
         const teamAbbr = item["TEAM_ABBREVIATION"];

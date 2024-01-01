@@ -1,17 +1,21 @@
 import { ReactNode, createContext, useEffect, useState } from "react";
 import { db } from "./db";
-import {ScoreBoard, Team, TeamsStandingStats } from "./types/types";
+import { PlayerBoxScore, ScoreBoard, Team, TeamsStandingStats } from "./types/types";
 
 type SeasonData = {
     teams: Team[];
     boxScores: ScoreBoard[];
     updateBoxScores: (newBoxScores: ScoreBoard[]) => void;
+    tradePlayers: (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => void,
+    userTeam: string
   };
   
   export const TeamsContext = createContext<SeasonData>({
     teams: [],
     boxScores: [],
-    updateBoxScores: () => {}
+    updateBoxScores: () => {},
+    tradePlayers: ([], []) => {},
+    userTeam: "MIL"
   });
   
   
@@ -22,6 +26,8 @@ type TeamsProviderProps = {
   export const TeamsProvider: React.FC<TeamsProviderProps> = ({ children }) => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [boxScores, setBoxScores] = useState<ScoreBoard[]>([]);
+    const [userTeam, _] = useState<string>("MIL")
+
   
     useEffect(() => {
       const fetchTeams = async () => {
@@ -31,26 +37,61 @@ type TeamsProviderProps = {
       if(teams.length === 0){
         fetchTeams().catch(console.error);
       }
-  
 
     }, []);
-  
+
+
     const updateBoxScores = (newBoxScores: ScoreBoard[]) => {
         setBoxScores(newBoxScores);
-        const teamStats = calculateTeamStats(newBoxScores)
-
+        const teamStats = calculateTeamStats(newBoxScores);
+        const playerStats = calculatePlayerStats(newBoxScores);
+      
         const updatedTeams = teams.map(team => {
-            return {
-              ...team,
-              stats: teamStats[team.teamAbbreviation] || null
-            };
-          });
+          return {
+            ...team,
+            stats: teamStats[team.teamAbbreviation] || null,
+            roster: team.roster.map(player => {
+              return {
+                ...player,
+                stats: playerStats[player.name] || player.stats // Update player stats or keep existing ones
+              };
+            })
+          };
+        });
+      
         setTeams(updatedTeams);
         console.log(updatedTeams);
-    };
+      };
+
+    const tradePlayers = (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => {
+        const newTeams = teams.map(team => {
+          if (team.teamAbbreviation === team1Abbr) {
+            // Update team1 roster and traded players' teamAbbreviation
+            return {
+              ...team,
+              roster: team.roster
+                .filter(player => !team1Players.includes(player.name))
+                .concat(teams.find(t => t.teamAbbreviation === team2Abbr)?.roster.filter(player => team2Players.includes(player.name)).map(player => ({ ...player, teamAbbr: team1Abbr })) || [])
+            };
+          } else if (team.teamAbbreviation === team2Abbr) {
+            // Update team2 roster and traded players' teamAbbreviation
+            return {
+              ...team,
+              roster: team.roster
+                .filter(player => !team2Players.includes(player.name))
+                .concat(teams.find(t => t.teamAbbreviation === team1Abbr)?.roster.filter(player => team1Players.includes(player.name)).map(player => ({ ...player, teamAbbr: team2Abbr })) || [])
+            };
+          }
+          return team;
+        });
+      
+        setTeams(newTeams);
+      };
+      
+      
     
       return (
-        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores }}>
+        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers }}>
           {children}
         </TeamsContext.Provider>
       );
@@ -80,6 +121,56 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
       scores: teamScores
     };
   }
+
+  function calculatePlayerStats(boxScores: ScoreBoard[]): { [playerName: string]: PlayerBoxScore } {
+    const playerStats: { [playerName: string]: PlayerBoxScore } = {};
+  
+    boxScores.forEach(game => {
+        Object.values(game.boxScore).forEach(entry => {
+          if (!playerStats[entry.name]) {
+            playerStats[entry.name] = {
+              name: entry.name,
+              points: 0,
+              offReb: 0,
+              defReb: 0,
+              assists: 0,
+              steals: 0,
+              blocks: 0,
+              turnovers: 0,
+              fouls: 0,
+              twoPointShotsTaken: 0,
+              twoPointShotsMade: 0,
+              threePointShotsTaken: 0,
+              threePointShotsMade: 0,
+              freeThrowsTaken: 0,
+              freeThrowsMade: 0,
+              mins: 0,
+              teamAbbr: entry.teamAbbr
+            };
+          }
+          playerStats[entry.name].points += entry.points;
+          playerStats[entry.name].offReb += entry.offReb;
+          playerStats[entry.name].defReb += entry.defReb;
+          playerStats[entry.name].assists += entry.assists;
+          playerStats[entry.name].steals += entry.steals;
+          playerStats[entry.name].blocks += entry.blocks;
+          playerStats[entry.name].turnovers += entry.turnovers;
+          playerStats[entry.name].fouls += entry.fouls;
+          playerStats[entry.name].twoPointShotsTaken += entry.twoPointShotsTaken;
+          playerStats[entry.name].twoPointShotsMade += entry.twoPointShotsMade;
+          playerStats[entry.name].threePointShotsTaken += entry.threePointShotsTaken;
+          playerStats[entry.name].threePointShotsMade += entry.threePointShotsMade;
+          playerStats[entry.name].freeThrowsTaken += entry.freeThrowsTaken;
+          playerStats[entry.name].freeThrowsMade += entry.freeThrowsMade;
+          playerStats[entry.name].mins += entry.mins;
+        });
+      });
+      
+      
+  
+    return playerStats;
+  };
+  
 
 
   function calculateTeamStats(boxScores: ScoreBoard[]): { [teamAbbr: string]: TeamsStandingStats } {

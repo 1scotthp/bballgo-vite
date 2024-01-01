@@ -45,6 +45,8 @@ export interface HeadCell<T> {
     name: string;
     id: number;
     usageRate: number;
+    stealRate: number;
+    blockRate: number;
     threePointAttemptRate: number;
     twoPointAttemptRate: number;
     freeThrowRate: number;
@@ -58,7 +60,6 @@ export interface HeadCell<T> {
     defensiveReboundRate: number;
     assistRate: number;
     age: number;
-    team: string;
   };
   
   export type PlayerRosterView = {
@@ -109,9 +110,9 @@ export type Weights = {
     id: number;
     name: string;
     ratings: PlayerRatings;
-    team: string;
+    teamAbbr: string;
     contract?: Contract;
-    stats?: PlayerStats;
+    stats: PlayerBoxScore;
     gameByGameStats: PlayerStats[];
     realGames: PlayerStats[];
     age?: number;

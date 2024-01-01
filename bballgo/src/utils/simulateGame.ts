@@ -104,15 +104,15 @@ function makeSubstitutions(
   
   
 const defaultWeights: Weights = {
-    TO: 0.5,
-    OFF_FOUL: 0.3,
+    TO: 1,
+    OFF_FOUL: 0.25,
     DEF_FOUL_FLOOR: 0.5,
-    ASSIST: 0.5,
-    POSS_LENGTH: 0.85,
-    USAGE_MULT: 0,
+    ASSIST: 0.65,
+    POSS_LENGTH: 0.9,
+    USAGE_MULT: 0.2,
     FREE_THROW: 0.7,
     STL: 0.7,
-    BLK: 0.7,
+    BLK: 1,
   };
 
 // MAIN FUNCTION
@@ -128,10 +128,10 @@ export function simulateGame(
     console.log("WRONG");
     return;
   }
+  const scoreBoard: ScoreBoard = initializeScoreBoard(homeTeamInput, awayTeamInput);
 
   const homeTeam = homeTeamInput.map((player) => player.ratings);
   const awayTeam = awayTeamInput.map((player) => player.ratings);
-  const scoreBoard: ScoreBoard = initializeScoreBoard(homeTeam, awayTeam);
   playerMinutes = distributeGameMinutes([...homeTeam, ...awayTeam])
 
 
@@ -248,6 +248,17 @@ function genIsAssist(weights: Weights): boolean {
 
 // }
 
+
+function genTurnoverProb(  
+    defensiveTeam: PlayerRatings[],
+    possessionEndingPlayer: PlayerRatings,
+    weights: Weights): number {
+      const defStealRate = defensiveTeam.reduce((total, player) => total + player.stealRate, 0) / defensiveTeam.length;
+      const playerTurnoverProb = possessionEndingPlayer.turnoverRate / possessionEndingPlayer.usageRate
+      const turnoverProb = weights.TO * playerTurnoverProb + defStealRate / 4; // should prob be team
+      return turnoverProb
+    }
+
 function simulatePossession(
   offensiveTeam: PlayerRatings[],
   defensiveTeam: PlayerRatings[],
@@ -263,21 +274,12 @@ function simulatePossession(
   const defensiveFoulFloorProb =
     weights.DEF_FOUL_FLOOR * genDefensiveFoulProb(defensiveTeam);
 
-  let avgTurnoverRate =
-    offensiveTeam.reduce(
-      (total, player) =>
-        total +
-        player.turnoverRate +
-        possessionEndingPlayer.turnoverRate,
-      0
-    ) / 2;
+   const turnoverProb = genTurnoverProb(defensiveTeam, possessionEndingPlayer, weights)
 
-  const turnoverProb = weights.TO * avgTurnoverRate; // should prob be team
   const offensiveFoulProb =
     weights.OFF_FOUL * possessionEndingPlayer.foulRate;
   const shotAttemptProb =
     1 - turnoverProb - offensiveFoulProb - defensiveFoulFloorProb;
-
 
   const i = getIndexFromWeights([
     defensiveFoulFloorProb,
@@ -293,12 +295,28 @@ function simulatePossession(
     null,
   ][i];
 
-  // if not def foul (floor), off foul (floor), or TO
-  if (outcome === null){
+  if (outcome === PossessionOutcome.DefensiveFoul) {
     const defensivePlayer =
       defensiveTeam[getIndexFromWeights([0.2, 0.2, 0.2, 0.2, 0.2])].name;
+      scoreBoard.boxScore[defensivePlayer].fouls += 1;
+  } else if (outcome === PossessionOutcome.Turnover) {
+    const stlRates = defensiveTeam.map(player => player.stealRate);
+    const defensivePlayer =
+      defensiveTeam[getIndexFromWeights(stlRates)].name;
+    if (Math.random() < 0.5 * weights.STL) {
+        scoreBoard.boxScore[defensivePlayer].steals += 1;
+    }
+    scoreBoard.boxScore[possessionEndingPlayer.name].turnovers += 1;
+  } else if (outcome === PossessionOutcome.OffensiveFoul) {
+    scoreBoard.boxScore[possessionEndingPlayer.name].fouls += 1;
+  } else {
+    const blkRates = defensiveTeam.map(player => player.blockRate);
+    const teamBlkRate = defensiveTeam.reduce((total, player) => total + player.blockRate, 0);
 
-    if (Math.random() < 0.03 * weights.BLK) {
+    const defensivePlayer =
+      defensiveTeam[getIndexFromWeights(blkRates)].name;
+
+    if (Math.random() < weights.BLK * teamBlkRate) {
       scoreBoard.boxScore[defensivePlayer].blocks += 1;
       return false;
     }
@@ -510,13 +528,13 @@ function getIndexFromWeights(weights: number[]): number {
 }
 
 export const initializeScoreBoard = (
-    homeTeam: PlayerRatings[],
-    awayTeam: PlayerRatings[]
+    homeTeam: Player[],
+    awayTeam: Player[]
   ): ScoreBoard => {
     // Initialize box score for each player
-    const initializePlayerBoxScore = (player: PlayerRatings): PlayerBoxScore => ({
+    const initializePlayerBoxScore = (player: Player): PlayerBoxScore => ({
         name: player.name,
-        teamAbbr: player.team,
+        teamAbbr: player.teamAbbr,
         points: 0,
         offReb: 0,
         defReb: 0,
