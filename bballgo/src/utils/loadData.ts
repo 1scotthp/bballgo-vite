@@ -1,4 +1,6 @@
 import { db } from "../db";
+import contractsCSV from '../data/NBA_Player_Data_22_23.csv?url';
+import playerCSV from "../data/NBA_Player_Data_22_23.csv?url"
 import { Player, PlayerRatings, Team } from "../types/types";
 import csvtojson from 'csvtojson';
 
@@ -90,7 +92,7 @@ async function parseInputData(inputData: string): Promise<PlayerContract[]> {
 
 
 export const loadContractData = async () => {
-    const response = await fetch("../data/NBA_Contracts_Player.csv");
+    const response = await fetch(contractsCSV);
     const csvData = await response.text();
     const contracts = await parseInputData(csvData);  // Parse the data
     const contractsMap = contracts.reduce((map, contract) => {
@@ -114,7 +116,7 @@ const loadPlayerData = async (contractDict: any) => {
     // Dictionary to hold teams and their players
     const teams: { [abbr: string]: Team } = {};
     
-    const response = await fetch("../data/NBA_Player_Data_22_23.csv")
+    const response = await fetch(playerCSV)
     const csvText = await response.text();
     const rawData = await csvtojson().fromString(csvText);
 
