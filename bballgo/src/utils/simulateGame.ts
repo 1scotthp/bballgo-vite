@@ -166,10 +166,16 @@ export function simulateGame(
 
 
     homeOnCourt.forEach(
-      (player) => (scoreBoard.boxScore[player.name].mins += possessionLength / 60)
+      (player) => {
+        scoreBoard.boxScore[player.name].mins += possessionLength / 60
+        scoreBoard.boxScore[player.name].poss += 1
+    }
     );
     awayOnCourt.forEach(
-      (player) => (scoreBoard.boxScore[player.name].mins += possessionLength / 60)
+      (player) => {
+        scoreBoard.boxScore[player.name].mins += possessionLength / 60
+        scoreBoard.boxScore[player.name].poss += 1
+        }
     );
     timeRemaining -= possessionLength;
 
@@ -556,7 +562,8 @@ export const initializeScoreBoard = (
         threePointShotsMade: 0,
         freeThrowsTaken: 0,
         freeThrowsMade: 0,
-        mins: 0
+        mins: 0,
+        poss: 0
       });
     
 

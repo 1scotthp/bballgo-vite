@@ -167,6 +167,7 @@ const loadPlayerData = async (contractDict: any) => {
           freeThrowsTaken: 0,
           freeThrowsMade: 0,
           mins: 0,
+          poss: 0,
           teamAbbr: item["TEAM_ABBREVIATION"],
         },
         gameByGameStats: [],
@@ -178,7 +179,8 @@ const loadPlayerData = async (contractDict: any) => {
             totalOppPoints: 0,
             wins: 0,
             losses: 0,
-            margin: 0
+            margin: 0,
+            poss: 0,
           } };
         }
         teams[teamAbbr].roster.push(player);

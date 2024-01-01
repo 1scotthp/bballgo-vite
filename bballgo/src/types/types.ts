@@ -80,7 +80,8 @@ export interface HeadCell<T> {
     totalOppPoints: number
     wins: number,
     losses: number,
-    margin: number
+    margin: number,
+    poss: number
  }
   
   export type Team = {
@@ -156,7 +157,8 @@ export type Weights = {
     freeThrowsTaken: number;
     freeThrowsMade: number;
     mins: number;
-    teamAbbr: string
+    teamAbbr: string,
+    poss: number
   };
   
 //   export type TeamScoreBoard = {

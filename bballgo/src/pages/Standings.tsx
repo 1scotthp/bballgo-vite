@@ -30,22 +30,24 @@ const Standings = () => {
             <thead>
               <tr>
                 <th>Team</th>
-                <th>MOV</th>
+                <th>NET Rating</th>
                 <th>Wins</th>
                 <th>Losses</th>
-                <th>PPG</th>
-                <th>Opp PPG</th>
+                <th>PTS/100</th>
+                <th>Opp PTS/100</th>
+                <th>Poss / game</th>
               </tr>
             </thead>
             <tbody>
               {sortedTeams.map(team => (
                 <tr key={team.teamAbbreviation}>
                     <td style={{ width: '150px' }}>{team.teamName || team.teamAbbreviation}</td>
-                    <td style={{ width: '100px' }}>{(team.stats?.margin / (team.stats?.wins + team.stats?.losses)).toFixed(1)}</td>
+                    <td style={{ width: '100px' }}>{(team.stats?.margin * 200 / team.stats?.poss).toFixed(1)}</td>
                     <td style={{ width: '60px' }}>{team.stats?.wins}</td>
                     <td style={{ width: '60px' }}>{team.stats?.losses}</td>
-                    <td style={{ width: '100px' }}>{(team.stats?.totalPoints / (team.stats?.wins + team.stats?.losses)).toFixed(1)}</td>
-                    <td style={{ width: '180px' }}>{(team.stats?.totalOppPoints / (team.stats?.wins + team.stats?.losses)).toFixed(1)}</td>
+                    <td style={{ width: '100px' }}>{(team.stats?.totalPoints * 200 / team.stats?.poss).toFixed(1)}</td>
+                    <td style={{ width: '180px' }}>{(team.stats?.totalOppPoints * 200 / team.stats?.poss).toFixed(1)}</td>
+                    <td style={{ width: '60px' }}>{(team.stats?.poss / (team.stats?.wins + team.stats?.losses) / 2).toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>

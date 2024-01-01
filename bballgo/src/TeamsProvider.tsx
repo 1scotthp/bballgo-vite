@@ -98,14 +98,16 @@ type TeamsProviderProps = {
   };
   
 
-export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, loser: string, scores: { [teamAbbr: string]: number } } {
+export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, loser: string, scores: { [teamAbbr: string]: number }, poss: number } {
     const teamScores: { [teamAbbr: string]: number } = {};
+    let possCount = 0;
   
     Object.values(scoreBoard.boxScore).forEach(playerBoxScore => {
       const teamAbbr = playerBoxScore.teamAbbr;
       if (!teamScores[teamAbbr]) {
         teamScores[teamAbbr] = 0;
       }
+      possCount += playerBoxScore.poss;
       teamScores[teamAbbr] += playerBoxScore.points;
     });
   
@@ -118,7 +120,8 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
     return {
       winner: isTeam1Winner ? winner : loser,
       loser: isTeam1Winner ? loser : winner,
-      scores: teamScores
+      scores: teamScores,
+      poss: possCount
     };
   }
 
@@ -145,6 +148,7 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
               freeThrowsTaken: 0,
               freeThrowsMade: 0,
               mins: 0,
+              poss: 0,
               teamAbbr: entry.teamAbbr
             };
           }
@@ -182,23 +186,27 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
       const loser = result.loser;
       const winningScore = result.scores[winner];
       const losingScore = result.scores[loser];
+      const poss = result.poss;
   
       // Initialize stats if not present
       if (!stats[winner]) {
-        stats[winner] = { wins: 0, losses: 0, totalPoints: 0, totalOppPoints: 0, margin: 0};
+        stats[winner] = { wins: 0, losses: 0, totalPoints: 0, totalOppPoints: 0, margin: 0, poss: 0};
       }
       if (!stats[loser]) {
-        stats[loser] = { wins: 0, losses: 0, totalPoints: 0, totalOppPoints: 0, margin: 0};
+        stats[loser] = { wins: 0, losses: 0, totalPoints: 0, totalOppPoints: 0, margin: 0, poss: 0};
       }
   
       // Update stats
       stats[winner].wins += 1;
       stats[winner].totalPoints += winningScore;
       stats[winner].totalOppPoints += losingScore
+      stats[winner].poss += poss
+
   
       stats[loser].losses += 1;
       stats[loser].totalPoints += losingScore;
       stats[loser].totalOppPoints += winningScore
+      stats[loser].poss += poss
     });
 
   
@@ -210,7 +218,8 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
         losses: stats[teamAbbr].losses,
         totalPoints: stats[teamAbbr].totalPoints,
         totalOppPoints: stats[teamAbbr].totalOppPoints,
-        margin: stats[teamAbbr].totalPoints - stats[teamAbbr].totalOppPoints
+        margin: stats[teamAbbr].totalPoints - stats[teamAbbr].totalOppPoints,
+        poss: stats[teamAbbr].poss / 10 // 10 players on court
       };
     });
   
