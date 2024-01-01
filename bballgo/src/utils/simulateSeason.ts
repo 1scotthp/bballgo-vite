@@ -7,9 +7,6 @@ const teamAbbrs = [
     "OKC", "ORL", "PHI", "PHX", "POR", "SAC", "SAS", "TOR", "UTA", "WAS"
   ];
 
-  type Matchups = {
-    [key: string]: Set<string>;
-  };
   
   function generateRandomSchedule(): [string, string][] {
     const totalGamesPerTeam = 82;

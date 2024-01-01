@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import { useContext,} from 'react';
 
 import { TeamsContext } from '../TeamsProvider';
 import { runSeason } from '../utils/simulateSeason';

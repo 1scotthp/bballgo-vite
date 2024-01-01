@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { TeamsContext } from '../TeamsProvider';
-import { simulateGame } from '../utils/simulateGame';
-import { runSeason } from '../utils/simulateSeason';
+
+
 
 
 
 const TeamInfoPage = () => {
-  const {teams, updateBoxScores, boxScores} = useContext(TeamsContext);
+  const {teams} = useContext(TeamsContext);
   const [selectedTeamAbbr, setSelectedTeamAbbr] = useState('');
 
   const handleTeamSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {

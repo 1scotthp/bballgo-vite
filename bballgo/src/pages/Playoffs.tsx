@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { TeamsContext, calculateGameResult } from '../TeamsProvider';
 import { ScoreBoard, Team } from '../types/types';
 import { simulateGame } from '../utils/simulateGame';
@@ -7,6 +7,12 @@ const conferences = {
   Eastern: ["BOS", "BKN", "NYK", "PHI", "TOR", "CHI", "CLE", "DET", "IND", "MIL", "ATL", "CHA", "MIA", "ORL", "WAS"],
   Western: ["DEN", "MIN", "OKC", "POR", "UTA", "GSW", "LAC", "LAL", "PHX", "SAC", "DAL", "HOU", "MEM", "NOP", "SAS"]
 };
+
+type PlayoffResults = {
+    east: RoundResult[] | null;
+    west: RoundResult[] | null;
+    finals: GameResult[] | null;
+  };
 
 const Playoffs = () => {
   const { teams } = useContext(TeamsContext);
@@ -21,7 +27,7 @@ const Playoffs = () => {
     .sort((a, b) => (b.stats?.wins || 0) - (a.stats?.wins || 0))
     .slice(0, 10);
 
-    const [playoffResults, setPlayoffResults] = useState({
+    const [playoffResults, setPlayoffResults] = useState<PlayoffResults>({
         east: null,
         west: null,
         finals: null

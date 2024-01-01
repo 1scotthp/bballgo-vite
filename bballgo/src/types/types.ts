@@ -111,7 +111,7 @@ export type Weights = {
     ratings: PlayerRatings;
     team: string;
     contract?: Contract;
-    stats: PlayerStats;
+    stats?: PlayerStats;
     gameByGameStats: PlayerStats[];
     realGames: PlayerStats[];
     age?: number;

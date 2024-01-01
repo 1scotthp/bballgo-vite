@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useEffect, useState } from "react";
 import { db } from "./db";
-import { PlayerBoxScore, ScoreBoard, Team, TeamsStandingStats } from "./types/types";
+import {ScoreBoard, Team, TeamsStandingStats } from "./types/types";
 
 type SeasonData = {
     teams: Team[];

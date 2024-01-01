@@ -1,6 +1,4 @@
 import { db } from "../db";
-import contractsCSV from '../data/NBA_Contracts_Player.csv';
-import playerCSV from "../data/NBA_Player_Data_22_23.csv"
 import { Player, PlayerRatings, Team } from "../types/types";
 import csvtojson from 'csvtojson';
 
@@ -92,7 +90,7 @@ async function parseInputData(inputData: string): Promise<PlayerContract[]> {
 
 
 export const loadContractData = async () => {
-    const response = await fetch(contractsCSV);
+    const response = await fetch("../data/NBA_Contracts_Player.csv");
     const csvData = await response.text();
     const contracts = await parseInputData(csvData);  // Parse the data
     const contractsMap = contracts.reduce((map, contract) => {
@@ -116,7 +114,7 @@ const loadPlayerData = async (contractDict: any) => {
     // Dictionary to hold teams and their players
     const teams: { [abbr: string]: Team } = {};
     
-    const response = await fetch(playerCSV)
+    const response = await fetch("../data/NBA_Player_Data_22_23.csv")
     const csvText = await response.text();
     const rawData = await csvtojson().fromString(csvText);
 
@@ -153,7 +151,13 @@ const loadPlayerData = async (contractDict: any) => {
       }
         const teamAbbr = item["TEAM_ABBREVIATION"];
         if (!teams[teamAbbr]) {
-          teams[teamAbbr] = { teamAbbreviation: teamAbbr, roster: [] };
+          teams[teamAbbr] = { teamAbbreviation: teamAbbr, roster: [], stats: {
+            totalPoints: 0,
+            totalOppPoints: 0,
+            wins: 0,
+            losses: 0,
+            margin: 0
+          } };
         }
         teams[teamAbbr].roster.push(player);
         

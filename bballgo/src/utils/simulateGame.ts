@@ -1,12 +1,8 @@
 
 import {
-  Team,
   PlayerRatings,
   ScoreBoard,
-  ShootingRatings,
   PossessionOutcome,
-  Possession,
-  PlayerStats,
   Player,
   Weights,
   PlayerBoxScore,
@@ -64,11 +60,6 @@ function distributeGameMinutes(
   }
 
 
-type PlayerSub = {
-    mins: number, 
-    expMins: number,
-    name: string
-}
 
 function makeSubstitutions(
     onCourt: PlayerRatings[],
@@ -217,12 +208,12 @@ function genOffensiveRebounder(players: PlayerRatings[]): string {
   return players[rebounderIndex].name;
 }
 
-function genDefensiveRebounder(players: PlayerRatings[]): string {
-  const rebounderIndex = getIndexFromWeights(
-    players.map((player) => player.defensiveReboundRate)
-  );
-  return players[rebounderIndex].name;
-}
+// function genDefensiveRebounder(players: PlayerRatings[]): string {
+//   const rebounderIndex = getIndexFromWeights(
+//     players.map((player) => player.defensiveReboundRate)
+//   );
+//   return players[rebounderIndex].name;
+// }
 
 function genAssister(players: PlayerRatings[]): string {
   const assisterIndex = getIndexFromWeights(
@@ -231,7 +222,7 @@ function genAssister(players: PlayerRatings[]): string {
   return players[assisterIndex].name;
 }
 
-function genIsAssist(players: PlayerRatings[], weights: Weights): boolean {
+function genIsAssist(weights: Weights): boolean {
   return Math.random() < weights.ASSIST;
 }
 
@@ -313,9 +304,7 @@ function simulatePossession(
     }
     const shotResult = simulateShot(
       offensiveTeam,
-      defensiveTeam,
       possessionEndingIndex,
-      weights,
       scoreBoard
     );
     if (shotResult == "miss") {
@@ -335,7 +324,7 @@ function simulatePossession(
         return false;
       }
     } else {
-      const isAssist = genIsAssist(offensiveTeam, weights);
+      const isAssist = genIsAssist(weights);
       if (isAssist) {
         const assister = genAssister(offensiveTeam);
         scoreBoard.boxScore[assister].assists += 1;
@@ -345,7 +334,7 @@ function simulatePossession(
   return false;
 }
 
-function genShotType(player: PlayerRatings, weights: Weights): "two" | "three" {
+function genShotType(player: PlayerRatings): "two" | "three" {
   const shotType = Math.random();
   const ratio =
     player.twoPointAttemptRate /
@@ -431,13 +420,11 @@ function takeShot(
 
 function simulateShot(
   offensiveTeam: PlayerRatings[],
-  defensiveTeam: PlayerRatings[],
   possessionEndingIndex: number,
-  weights: Weights,
   scoreBoard: ScoreBoard
 ): "make" | "miss" {
   const player = offensiveTeam[possessionEndingIndex];
-  const shotType = genShotType(player, weights);
+  const shotType = genShotType(player);
   const isFoul: boolean = genIsFoul(shotType, player);
 
   return takeShot(player, shotType, isFoul, scoreBoard);
