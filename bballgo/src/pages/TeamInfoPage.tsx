@@ -56,7 +56,7 @@ const TeamInfoPage = () => {
     return (
       <tr key={player.id}>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{player.name}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins / 82).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins / 87).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.points * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.offReb + player.stats.defReb) * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.assists * per36Multiplier).toFixed(1)}</td>

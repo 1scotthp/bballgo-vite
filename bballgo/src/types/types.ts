@@ -106,6 +106,18 @@ export type Weights = {
     STL: number;
     BLK: number;
   };
+
+  export enum PossessionStart {
+    Miss,
+    Make,
+    DeadBall,
+    Steal,
+    MissFT,
+    MakeFT,
+    Timeout,
+    Oreb,
+    DefFoulFloor
+  }
   
   export type Player = {
     id: number;

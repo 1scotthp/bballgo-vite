@@ -6,6 +6,7 @@ import {
   Player,
   Weights,
   PlayerBoxScore,
+  PossessionStart,
 } from "../types/types";
 
 function distributeGameMinutes(
@@ -22,7 +23,6 @@ function distributeGameMinutes(
         total + Math.pow(100 * player.usageRate, 4) + player.offensiveReboundRate,
       0
     );
-  
   
     let totalAssignedMinutes = 0;
   
@@ -105,10 +105,10 @@ function makeSubstitutions(
   
 const defaultWeights: Weights = {
     TO: 1,
-    OFF_FOUL: 0.25,
-    DEF_FOUL_FLOOR: 0.5,
+    OFF_FOUL: 0.2,
+    DEF_FOUL_FLOOR: 0.45,
     ASSIST: 0.65,
-    POSS_LENGTH: 0.9,
+    POSS_LENGTH: 1,
     USAGE_MULT: 0.2,
     FREE_THROW: 0.7,
     STL: 0.7,
@@ -144,24 +144,22 @@ export function simulateGame(
 
   let timeRemaining = 2880;
 
-  let isOreb = false;
   let posCount = 0;
+  let prevPossessionEnd = PossessionStart.Timeout;
   while (timeRemaining > 0) {
     let possessionLength = 0;
 
     const offense = home_team_has_possession ? homeOnCourt : awayOnCourt;
     const defense = home_team_has_possession ? awayOnCourt : homeOnCourt;
 
-    isOreb = simulatePossession(offense, defense, weights, scoreBoard);
-    possessionLength +=
-    simulatePossessionTime("non-transition")[1] * weights.POSS_LENGTH;
+    possessionLength += simulatePossessionTime(prevPossessionEnd) * weights.POSS_LENGTH;
+    prevPossessionEnd = simulatePossession(offense, defense, weights, scoreBoard, prevPossessionEnd);
     posCount += 1;
 
-    while (isOreb) {
-    isOreb = simulatePossession(homeOnCourt, awayOnCourt, weights, scoreBoard);
-    possessionLength +=
-        simulatePossessionTime("offensive_rebound")[1] * weights.POSS_LENGTH;
-    posCount += 1;
+    while (prevPossessionEnd === PossessionStart.Oreb || prevPossessionEnd === PossessionStart.DefFoulFloor) {
+        prevPossessionEnd = simulatePossession(homeOnCourt, awayOnCourt, weights, scoreBoard, prevPossessionEnd);
+        possessionLength +=
+            simulatePossessionTime(prevPossessionEnd) * weights.POSS_LENGTH;
     }
 
 
@@ -214,12 +212,12 @@ function genOffensiveRebounder(players: PlayerRatings[]): string {
   return players[rebounderIndex].name;
 }
 
-// function genDefensiveRebounder(players: PlayerRatings[]): string {
-//   const rebounderIndex = getIndexFromWeights(
-//     players.map((player) => player.defensiveReboundRate)
-//   );
-//   return players[rebounderIndex].name;
-// }
+function genDefensiveRebounder(players: PlayerRatings[]): string {
+  const rebounderIndex = getIndexFromWeights(
+    players.map((player) => player.defensiveReboundRate)
+  );
+  return players[rebounderIndex].name;
+}
 
 function genAssister(players: PlayerRatings[]): string {
   const assisterIndex = getIndexFromWeights(
@@ -265,12 +263,14 @@ function genTurnoverProb(
       return turnoverProb
     }
 
+
 function simulatePossession(
   offensiveTeam: PlayerRatings[],
   defensiveTeam: PlayerRatings[],
   weights: Weights,
-  scoreBoard: ScoreBoard
-): boolean {
+  scoreBoard: ScoreBoard,
+  prevPossessionEnd: PossessionStart
+): PossessionStart {
   let possessionEndingIndex: number = selectPossessionEndingPlayer(
     offensiveTeam,
     weights
@@ -305,16 +305,21 @@ function simulatePossession(
     const defensivePlayer =
       defensiveTeam[getIndexFromWeights([0.2, 0.2, 0.2, 0.2, 0.2])].name;
       scoreBoard.boxScore[defensivePlayer].fouls += 1;
+    return PossessionStart.DefFoulFloor;
   } else if (outcome === PossessionOutcome.Turnover) {
     const stlRates = defensiveTeam.map(player => player.stealRate);
     const defensivePlayer =
       defensiveTeam[getIndexFromWeights(stlRates)].name;
     if (Math.random() < 0.5 * weights.STL) {
         scoreBoard.boxScore[defensivePlayer].steals += 1;
+        return PossessionStart.Steal
     }
     scoreBoard.boxScore[possessionEndingPlayer.name].turnovers += 1;
+    return PossessionStart.DeadBall;
+
   } else if (outcome === PossessionOutcome.OffensiveFoul) {
     scoreBoard.boxScore[possessionEndingPlayer.name].fouls += 1;
+    return PossessionStart.DeadBall;
   } else {
     const blkRates = defensiveTeam.map(player => player.blockRate);
     const teamBlkRate = defensiveTeam.reduce((total, player) => total + player.blockRate, 0);
@@ -324,13 +329,14 @@ function simulatePossession(
 
     if (Math.random() < weights.BLK * teamBlkRate) {
       scoreBoard.boxScore[defensivePlayer].blocks += 1;
-      return false;
+      return PossessionStart.Miss;
     }
     const shotResult = simulateShot(
       offensiveTeam,
       defensiveTeam,
       possessionEndingIndex,
-      scoreBoard
+      scoreBoard,
+      prevPossessionEnd
     );
     if (shotResult == "miss") {
       const oreb =
@@ -343,10 +349,10 @@ function simulatePossession(
 
       if (is_oreb) {
         scoreBoard.boxScore[genOffensiveRebounder(offensiveTeam)].offReb += 1;
-        return true;
+        return PossessionStart.Oreb;
       } else {
-        scoreBoard.boxScore[genOffensiveRebounder(defensiveTeam)].defReb += 1;
-        return false;
+        scoreBoard.boxScore[genDefensiveRebounder(defensiveTeam)].defReb += 1;
+        return PossessionStart.Miss;
       }
     } else {
       const isAssist = genIsAssist(weights);
@@ -354,9 +360,9 @@ function simulatePossession(
         const assister = genAssister(offensiveTeam);
         scoreBoard.boxScore[assister].assists += 1;
       }
+      return PossessionStart.Make;
     }
   }
-  return false;
 }
 
 function genShotType(player: PlayerRatings): "two" | "three" {
@@ -404,11 +410,38 @@ function takeShot(
   shotType: "two" | "three",
   isFoul: boolean,
   scoreBoard: ScoreBoard,
-  fouler: string
+  fouler: string,
+  prevPossessionEnd: PossessionStart
 ): "make" | "miss" {
   const foulPenalty = isFoul ? 0.3 : 1;
+  let possessionConst = 1;
+  switch(prevPossessionEnd) {
+    case PossessionStart.Make:
+      possessionConst *= 0.9815;
+      break;
+    case PossessionStart.Miss: 
+      possessionConst *= 1.0153;
+      break;
+    case PossessionStart.DeadBall:
+      possessionConst *= 0.9659;
+      break;
+    case PossessionStart.Steal:
+      possessionConst *= 1.154;
+      break;
+    case PossessionStart.MissFT:
+      possessionConst *= 0.9928;
+      break;
+    case PossessionStart.MakeFT:
+      possessionConst *= 0.9642;
+      break;
+    case PossessionStart.Timeout:
+      possessionConst *= 0.9624;
+      break;
+  }
+
+
   if (shotType === "two") {
-    if (Math.random() < player.twoPointPercentage * foulPenalty) {
+    if (Math.random() < player.twoPointPercentage * foulPenalty * possessionConst) {
       scoreBoard.boxScore[player.name].twoPointShotsTaken += 1;
       scoreBoard.boxScore[player.name].twoPointShotsMade += 1;
       scoreBoard.boxScore[player.name].points += 2;
@@ -427,7 +460,7 @@ function takeShot(
       return "miss";
     }
   } else {
-    if (Math.random() < player.threePointPercentage * foulPenalty) {
+    if (Math.random() < player.threePointPercentage * foulPenalty * possessionConst) {
       scoreBoard.boxScore[player.name].threePointShotsTaken += 1;
       scoreBoard.boxScore[player.name].threePointShotsMade += 1;
       scoreBoard.boxScore[player.name].points += 3;
@@ -450,7 +483,8 @@ function simulateShot(
   offensiveTeam: PlayerRatings[],
   defensiveTeam: PlayerRatings[],
   possessionEndingIndex: number,
-  scoreBoard: ScoreBoard
+  scoreBoard: ScoreBoard,
+  prevPossessionEnd: PossessionStart
 ): "make" | "miss" {
   const player = offensiveTeam[possessionEndingIndex];
   const shotType = genShotType(player);
@@ -458,7 +492,7 @@ function simulateShot(
   const foulRates = defensiveTeam.map((player) => player.foulRate);
   const fouler = defensiveTeam[getIndexFromWeights(foulRates)].name
 
-  return takeShot(player, shotType, isFoul, scoreBoard, fouler);
+  return takeShot(player, shotType, isFoul, scoreBoard, fouler, prevPossessionEnd);
 }
 
 function genDefensiveFoulProb(defensiveTeam: PlayerRatings[]): number {
@@ -468,33 +502,54 @@ function genDefensiveFoulProb(defensiveTeam: PlayerRatings[]): number {
   return defensiveFoulRate / 10;
 }
 
-function simulatePossessionTime(possessionType: string): [string, number] {
-  const params = {
-    offensive_rebound: {
-      minTime: 1,
-      maxTime: 14,
-      avgTime: 7,
-      stdDev: 2,
-    },
-    default: {
-      minTime: 3,
-      maxTime: 23,
-      avgTime: 14,
-      stdDev: 3,
-    },
-  };
-  const { minTime, maxTime, avgTime, stdDev } =
-    (params as any)[possessionType] || params.default;
+function simulatePossessionTime(possessionType: PossessionStart): number {
+  let avgPossessionTime = 14.1;
+  let stdPossessionTime = 7.189;
+  
+  switch(possessionType) {
+    case PossessionStart.Make:
+      avgPossessionTime *= 1.225;
+      break;
+    case PossessionStart.Miss: 
+      avgPossessionTime *= 0.7246;
+      break;
+    case PossessionStart.DeadBall:
+      avgPossessionTime *= 1.1021;
+      break;
+    case PossessionStart.Steal:
+      avgPossessionTime *= 0.5703;
+      break;
+    case PossessionStart.MissFT:
+      avgPossessionTime *= 1.034;
+      break;
+    case PossessionStart.MakeFT:
+      avgPossessionTime *= 1.125;
+      break;
+    case PossessionStart.Timeout:
+      avgPossessionTime *= 1.212;
+      break;
+    case PossessionStart.Oreb:
+      avgPossessionTime *= 0.3326;
+      break;
+  }
 
-  const possessionTime: number = Math.round(avgTime + stdDev * Math.random());
-  const clampedTime: number = Math.min(
-    Math.max(minTime, possessionTime),
-    maxTime
-  );
-  const possessionMode: string =
-    possessionTime <= 8 ? "transition" : "non-transition";
+  // Generating a random number with normal distribution
+function randomGaussian(mean: number, stdDev: number) {
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+    while(v === 0) v = Math.random();
+    let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    return num * stdDev + mean;
+  }
 
-  return [possessionMode, clampedTime];
+
+  const possessionTime = Math.round(randomGaussian(avgPossessionTime, stdPossessionTime));
+  let clampedTime = Math.min(24, possessionTime);
+  if(PossessionStart.Oreb === possessionType){
+    clampedTime = Math.min(14, possessionTime);
+  }
+
+  return clampedTime;
 }
 
 function selectPossessionEndingPlayer(
