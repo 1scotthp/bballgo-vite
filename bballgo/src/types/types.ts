@@ -176,6 +176,8 @@ export type Weights = {
     mins: number;
     teamAbbr: string,
     poss: number
+    teamPointsScored: number;
+    teamPointsAgainst: number;
   };
   
 //   export type TeamScoreBoard = {

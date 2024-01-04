@@ -149,7 +149,9 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
               freeThrowsMade: 0,
               mins: 0,
               poss: 0,
-              teamAbbr: entry.teamAbbr
+              teamAbbr: entry.teamAbbr,
+              teamPointsAgainst: 0,
+              teamPointsScored: 0
             };
           }
           playerStats[entry.name].points += entry.points;
@@ -167,6 +169,9 @@ export function calculateGameResult(scoreBoard: ScoreBoard): { winner: string, l
           playerStats[entry.name].freeThrowsTaken += entry.freeThrowsTaken;
           playerStats[entry.name].freeThrowsMade += entry.freeThrowsMade;
           playerStats[entry.name].mins += entry.mins;
+          playerStats[entry.name].poss += entry.poss;
+          playerStats[entry.name].teamPointsAgainst += entry.teamPointsAgainst;
+          playerStats[entry.name].teamPointsScored += entry.teamPointsScored;
         });
       });
       

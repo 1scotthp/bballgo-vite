@@ -48,7 +48,7 @@ const teamAbbrs = [
 //   }
 
   function generateFixedSchedule(): [string, string][] {
-    const totalRounds = 3;
+    const totalRounds = 12;
     const schedule: [string, string][] = [];
   
     // Generate each unique matchup

@@ -46,6 +46,7 @@ const TeamInfoPage = () => {
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>3PTM/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>FTA/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>FTM/36</th>
+    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>+/-</th>
   </tr>
 </thead>
 
@@ -56,7 +57,7 @@ const TeamInfoPage = () => {
     return (
       <tr key={player.id}>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{player.name}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins / 87).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins / 87 / 4).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.points * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.offReb + player.stats.defReb) * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.assists * per36Multiplier).toFixed(1)}</td>
@@ -70,6 +71,7 @@ const TeamInfoPage = () => {
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.threePointShotsMade * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsTaken * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsMade * per36Multiplier).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*100/player.stats.poss).toFixed(1)}</td>
       </tr>
     );
   })}

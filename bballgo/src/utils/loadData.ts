@@ -174,6 +174,8 @@ const loadPlayerData = async (contractDict: any) => {
           mins: 0,
           poss: 0,
           teamAbbr: item["TEAM_ABBREVIATION"],
+          teamPointsScored: 0,
+          teamPointsAgainst: 0
         },
         gameByGameStats: [],
       }
