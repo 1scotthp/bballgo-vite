@@ -43,7 +43,7 @@ function distributeGameMinutes(
       // Keep top 12 minutes as is, set the rest to 0
       playerMinutesArray.forEach((player, index) => {
         const minutes = index < 12 ? player.mins : 0;
-        playerMinutes.set(player.name, Math.pow(minutes, 1.25));
+        playerMinutes.set(player.name, Math.pow(minutes, 1.15) + Math.random() * 3);
       });
       
         const sortedPlayerMinutes = Array.from(playerMinutes).sort((a, b) => b[1] - a[1]);
@@ -57,26 +57,13 @@ function distributeGameMinutes(
       // Subtract minsOver from each player's minutes in the playerMinutes map
         playerMinutes.forEach((minutes, playerName) => {
             const adjustedMinutes = Math.max(minutes - minsOver, 0); // Ensuring minutes don't go below 0
-            playerMinutes.set(playerName, Math.min(adjustedMinutes, 43));
+            playerMinutes.set(playerName, Math.min(adjustedMinutes, 40));
         });
 
     
        console.log(playerMinutes, totalAssignedMinutes);
   
     return playerMinutes;
-  }
-
-
-  function shuffleArray(array: PlayerRatings[]) {
-    for (let i = array.length - 1; i > 0; i--) {
-      // Generate a random index lower than the current element
-      const j = Math.floor(Math.random() * (i + 1));
-  
-      // Swap elements at indices i and j
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-  
-    return array;
   }
 
 
@@ -90,8 +77,11 @@ function makeSubstitutions(
     let subInPlayerIndex = -1;
   
 
-    shuffleArray(onCourt);
-    shuffleArray(onBench);
+    // high nums near beginning. high fatigue and low exp mins gets you booted
+    onCourt.sort((a, b) => ((b.fatigue - (playerMinutes.get(b.name) ?? 0)) - (a.fatigue - (playerMinutes.get(a.name) ?? 0))));
+
+    // high nums near beginning high mins low fatigue gets you in
+    onBench.sort((a, b) => (playerMinutes.get(b.name) ?? 0 - b.fatigue) - (playerMinutes.get(a.name) ?? 0 - a.fatigue));
 
     // Find player to sub out
     for (let i = 0; i < onCourt.length; i++) {
@@ -99,7 +89,7 @@ function makeSubstitutions(
       const minsPlayed = scoreBoard.boxScore[playerName].mins;
       const expMins = playerMinutes.get(playerName) ?? 0;
   
-      if (minsPlayed >= expMins * 0.8 || minsPlayed > 40) {
+      if (onCourt[i].fatigue > 40 || minsPlayed >= expMins * 0.8 || Math.random() < 0.05) {
         subOutPlayerIndex = i;
         break;
       }
@@ -111,7 +101,7 @@ function makeSubstitutions(
       const minsPlayed = scoreBoard.boxScore[playerName].mins;
       const expMins = playerMinutes.get(playerName) ?? 0;
   
-      if (minsPlayed < expMins * 1.2 && expMins > 1) {
+      if (minsPlayed < expMins * 1.2 && expMins > 1 && onBench[j].fatigue < 10) {
         subInPlayerIndex = j;
         break;
       }
@@ -119,9 +109,10 @@ function makeSubstitutions(
   
     // Perform the substitution
     if (subOutPlayerIndex !== -1 && subInPlayerIndex !== -1) {
-      const temp = onCourt[subOutPlayerIndex];
-      onCourt[subOutPlayerIndex] = onBench[subInPlayerIndex];
-      onBench[subInPlayerIndex] = temp;
+      let subInPlayer = onBench[subInPlayerIndex];
+      const subOutPlayer = onCourt[subOutPlayerIndex];
+      onCourt[subOutPlayerIndex] = subInPlayer;
+      onBench[subInPlayerIndex] = subOutPlayer;
     }
   }
 
@@ -192,14 +183,26 @@ export function simulateGame(
       (player) => {
         scoreBoard.boxScore[player.name].mins += possessionLength / 60
         scoreBoard.boxScore[player.name].poss += 1
+        player.fatigue += 1
     }
     );
     awayOnCourt.forEach(
       (player) => {
         scoreBoard.boxScore[player.name].mins += possessionLength / 60
         scoreBoard.boxScore[player.name].poss += 1
+        player.fatigue += 1
         }
     );
+    homeBench.forEach(
+        (player) => {
+          player.fatigue = Math.max(player.fatigue - 3, 0)
+      }
+      );
+      awayBench.forEach(
+        (player) => {
+            player.fatigue = Math.max(player.fatigue - 3, 0)
+          }
+      );
     timeRemaining -= possessionLength;
 
     // if (posCount % 2) {
@@ -284,7 +287,7 @@ function genTurnoverProb(
     DDPM: number): number {
       const defStealRate = defensiveTeam.reduce((total, player) => total + player.stealRate, 0);
       const playerTurnoverProb = possessionEndingPlayer.turnoverRate / possessionEndingPlayer.usageRate
-      const turnoverProb = playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM)/25; // should prob be team
+      const turnoverProb = playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM)/50; // should prob be team
 
       return turnoverProb
     }
@@ -477,7 +480,7 @@ function takeShot(
       break;
   }
 
-  possessionConst += ODPM / 25 - DDPM / 25;
+  possessionConst += ODPM / 50 - DDPM / 50;
 
   if (shotType === "two") {
     if (Math.random() < player.twoPointPercentage * foulPenalty * possessionConst) {
@@ -533,7 +536,7 @@ function simulateShot(
   const ODPM = offensiveTeam.map((player) => player.nonBoxODPM).reduce((accumulator, currentValue) => {
     return accumulator + currentValue;
   }, 0) / 5;
-  const DDPM = defensiveTeam.map((player) => player.nonBoxDDPM).reduce((accumulator, currentValue) => {
+  const DDPM = defensiveTeam.map((player) => player.DDPM).reduce((accumulator, currentValue) => {
     return accumulator + currentValue;
   }, 0) / 5;
 

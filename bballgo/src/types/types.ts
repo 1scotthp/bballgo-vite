@@ -64,7 +64,7 @@ export interface HeadCell<T> {
     DDPM: number;
     nonBoxODPM: number;
     nonBoxDDPM: number;
-
+    fatigue: number;
   };
   
   export type PlayerRosterView = {

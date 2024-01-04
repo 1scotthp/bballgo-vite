@@ -145,7 +145,8 @@ const loadPlayerData = async (contractDict: any) => {
         ODPM: parseInt(item["O-DPM"]),
         DDPM: parseInt(item["D-DPM"]),
         nonBoxDDPM: parseInt(item["D-DPM"]) - parseInt(item["Box D-DPM"]),
-        nonBoxODPM: parseInt(item["O-DPM"]) - parseInt(item["Box O-DPM"])
+        nonBoxODPM: parseInt(item["O-DPM"]) - parseInt(item["Box O-DPM"]),
+        fatigue: 0
       };
       let player: Player = {
         id: parseInt(item.nba_id),
