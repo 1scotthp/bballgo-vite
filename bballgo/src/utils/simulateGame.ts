@@ -9,6 +9,20 @@ import {
   PossessionStart,
 } from "../types/types";
 
+// const: -15.5213 + fga_per_100_poss: 2.6721 + x3pa_per_100_poss: 0.1710 + fg_percent: 38.4119 + fta_per_100_poss: 1.6870 + ft_percent: 8.8982 + usg_percent: -2.3688 + ast_per_100_poss: 0.9554 + stl_per_100_poss: 0.4940 + Non Box O-DPM: 0.8181 + Non Box D-DPM: 1.7782
+
+const FGA_PER_100_POSS = 2.6721;
+const THREES_PER_100_POSS = 0.1710;
+const FG_PERCENT = 38.4119;
+const FTA_PER_100_POSS = 1.6870;
+const FT_PERCENT = 8.8982;
+const USG_PERCENT = -2.3688;
+const AST_PER_100_POSS = 0.9554;
+const STL_PER_100_POSS = 0.4940;
+const NON_BOX_O_DPM = 0.8181;
+const NON_BOX_D_DPM = 1.7782;
+
+
 function distributeGameMinutes(
     players: PlayerRatings[]
   ): Map<string, number> {
@@ -16,49 +30,54 @@ function distributeGameMinutes(
   
     // Ignore players with NaN usageRate
     const validPlayers = players.filter((player) => !isNaN(player.usageRate));
-  
-    // Calculate total usageRate
-    const totalUsageRate = validPlayers.reduce(
-      (total, player) =>
-        total + Math.pow(100 * player.usageRate, 4) + player.offensiveReboundRate,
-      0
-    );
-  
-    let totalAssignedMinutes = 0;
-  
-    validPlayers.forEach((player: PlayerRatings) => {
-      let playerMinutesProportional =
-        ((Math.pow(100 * player.usageRate, 4) + player.offensiveReboundRate) /
-          totalUsageRate) *
-        240;
-      if (playerMinutesProportional > 4) {
-        playerMinutesProportional += 10;
-      }
-      playerMinutes.set(player.name, playerMinutesProportional);
-      totalAssignedMinutes += playerMinutesProportional;
-    });
-  
-    let extraMinutes = 240 - totalAssignedMinutes;
-  
-    // Sort the players based on assigned minutes in descending order
-    const sortedPlayers = Array.from(playerMinutes)
-      .sort((a, b) => b[1] - a[1])
-      .map((pair) => pair[0]);
-  
-    // Distribute extra minutes
-    let i = 0;
-    while (extraMinutes > 0) {
-      const player = sortedPlayers[i];
-      const currentMinutes = playerMinutes.get(player) as number;
-      const additionalMinutes = Math.min(10, extraMinutes);
-      playerMinutes.set(player, currentMinutes + additionalMinutes);
-      extraMinutes -= additionalMinutes;
-      i = (i + 1) % sortedPlayers.length; // loop back to the start of the array if we reach the end
-    }
+
+    const playerMinutesArray = validPlayers.map(player => {
+        const playerMins = -16 + USG_PERCENT*player.usageRate*100 +  FGA_PER_100_POSS*100*(player.twoPointAttemptRate+player.threePointAttemptRate) + THREES_PER_100_POSS*player.threePointAttemptRate*100 + FG_PERCENT*player.twoPointPercentage + FT_PERCENT*player.freeThrowPercentage + player.assistRate*100*AST_PER_100_POSS + FTA_PER_100_POSS*100*player.freeThrowRate + STL_PER_100_POSS*100*player.stealRate + NON_BOX_D_DPM*player.nonBoxDDPM + NON_BOX_O_DPM*player.nonBoxODPM;
+      
+        return { name: player.name, mins: playerMins };
+      });
+      
+      // Sort by minutes in descending order
+      playerMinutesArray.sort((a, b) => b.mins - a.mins);
+      
+      // Keep top 12 minutes as is, set the rest to 0
+      playerMinutesArray.forEach((player, index) => {
+        const minutes = index < 12 ? player.mins : 0;
+        playerMinutes.set(player.name, Math.pow(minutes, 1.25));
+      });
+      
+        const sortedPlayerMinutes = Array.from(playerMinutes).sort((a, b) => b[1] - a[1]);
+
+        // Sum of minutes for the top 12 players
+        const totalAssignedMinutes = sortedPlayerMinutes.slice(0, 12).reduce((sum, [, mins]) => sum + mins, 0);
+
+        // Calculate minsOver
+        const minsOver = (totalAssignedMinutes - 5 * 48) / 12;
+
+      // Subtract minsOver from each player's minutes in the playerMinutes map
+        playerMinutes.forEach((minutes, playerName) => {
+            const adjustedMinutes = Math.max(minutes - minsOver, 0); // Ensuring minutes don't go below 0
+            playerMinutes.set(playerName, Math.min(adjustedMinutes, 43));
+        });
+
+    
+       console.log(playerMinutes, totalAssignedMinutes);
   
     return playerMinutes;
   }
 
+
+  function shuffleArray(array: PlayerRatings[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      // Generate a random index lower than the current element
+      const j = Math.floor(Math.random() * (i + 1));
+  
+      // Swap elements at indices i and j
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  
+    return array;
+  }
 
 
 function makeSubstitutions(
@@ -70,13 +89,17 @@ function makeSubstitutions(
     let subOutPlayerIndex = -1;
     let subInPlayerIndex = -1;
   
+
+    shuffleArray(onCourt);
+    shuffleArray(onBench);
+
     // Find player to sub out
     for (let i = 0; i < onCourt.length; i++) {
       const playerName = onCourt[i].name;
       const minsPlayed = scoreBoard.boxScore[playerName].mins;
       const expMins = playerMinutes.get(playerName) ?? 0;
   
-      if (minsPlayed >= expMins * 0.8) {
+      if (minsPlayed >= expMins * 0.8 || minsPlayed > 40) {
         subOutPlayerIndex = i;
         break;
       }
@@ -88,7 +111,7 @@ function makeSubstitutions(
       const minsPlayed = scoreBoard.boxScore[playerName].mins;
       const expMins = playerMinutes.get(playerName) ?? 0;
   
-      if (minsPlayed < expMins * 0.9) {
+      if (minsPlayed < expMins * 1.2 && expMins > 1) {
         subInPlayerIndex = j;
         break;
       }
@@ -101,7 +124,7 @@ function makeSubstitutions(
       onBench[subInPlayerIndex] = temp;
     }
   }
-  
+
   
 const defaultWeights: Weights = {
     TO: 1,
@@ -120,7 +143,7 @@ export function simulateGame(
   homeTeamInput: Player[] | undefined,
   awayTeamInput: Player[] | undefined,
   weights: Weights = defaultWeights,
-  playerMinutes?: Map<string, number>
+//   playerMinutes?: Map<string, number>
 ) {
   let home_team_has_possession = true;
 
@@ -132,7 +155,9 @@ export function simulateGame(
 
   const homeTeam = homeTeamInput.map((player) => player.ratings);
   const awayTeam = awayTeamInput.map((player) => player.ratings);
-  playerMinutes = distributeGameMinutes([...homeTeam, ...awayTeam])
+  const playerMinutesHome = distributeGameMinutes(homeTeam);
+  const playerMinutesAway = distributeGameMinutes(awayTeam);
+  const playerMinutes = new Map([...playerMinutesHome, ...playerMinutesAway]);
 
 
   const homeOnCourt: PlayerRatings[] = homeTeam.slice(0, 5);
@@ -177,10 +202,10 @@ export function simulateGame(
     );
     timeRemaining -= possessionLength;
 
-    if (posCount % 5) {
+    // if (posCount % 2) {
       makeSubstitutions(homeOnCourt, homeBench, playerMinutes, scoreBoard);
       makeSubstitutions(awayOnCourt, awayBench, playerMinutes, scoreBoard);
-    }
+    // }
 
     home_team_has_possession = !home_team_has_possession;
   }
@@ -503,7 +528,7 @@ function genDefensiveFoulProb(defensiveTeam: PlayerRatings[]): number {
 }
 
 function simulatePossessionTime(possessionType: PossessionStart): number {
-  let avgPossessionTime = 14.1;
+  let avgPossessionTime = 14.5;
   let stdPossessionTime = 7.189;
   
   switch(possessionType) {

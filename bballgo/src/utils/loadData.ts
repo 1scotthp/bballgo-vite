@@ -129,19 +129,23 @@ const loadPlayerData = async (contractDict: any) => {
         threePointAttemptRate: parseFloat(item["FG3A/100"]) / 100,
         twoPointAttemptRate:
           (parseFloat(item["FGA/100"]) - parseFloat(item["FG3A/100"])) / 100,
-        freeThrowRate: parseFloat(item["FTARate%"]),
+        freeThrowRate: parseFloat(item["FTA/100"])/100,
         stealRate: parseFloat(item["STL/100"]) / 100,
         blockRate: parseFloat(item["BLK/100"]) / 100,
         twoPointPercentage: parseFloat(item["FG2%"]),
         freeThrowPercentage: parseFloat(item["FT%"]),
         threePointPercentage: parseFloat(item["FG3%"]),
-        turnoverRate: parseFloat(item["TOV/100"]) / 100,
+        turnoverRate: parseFloat(item["TOV/100"])/100,
         foulRate: parseFloat(item["Fouls/Min"]),
         playerHeight: parseInt(item.height),
-        offensiveReboundRate: parseFloat(item["REB/100"]),
-        defensiveReboundRate: parseFloat(item["REB/100"]) / 3,
-        assistRate: parseFloat(item["AST/100"]),
+        offensiveReboundRate: parseFloat(item["REB/100"]) / 300,
+        defensiveReboundRate: parseFloat(item["REB/100"]) / 100,
+        assistRate: parseFloat(item["AST/100"]) / 100,
         age: parseInt(item.AGE),
+        ODPM: parseInt(item["O-DPM"]),
+        DDPM: parseInt(item["D-DPM"]),
+        nonBoxDDPM: parseInt(item["D-DPM"]) - parseInt(item["Box D-DPM"]),
+        nonBoxODPM: parseInt(item["O-DPM"]) - parseInt(item["Box O-DPM"])
       };
       let player: Player = {
         id: parseInt(item.nba_id),

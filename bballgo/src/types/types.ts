@@ -60,6 +60,11 @@ export interface HeadCell<T> {
     defensiveReboundRate: number;
     assistRate: number;
     age: number;
+    ODPM: number;
+    DDPM: number;
+    nonBoxODPM: number;
+    nonBoxDDPM: number;
+
   };
   
   export type PlayerRosterView = {
