@@ -284,7 +284,7 @@ function genTurnoverProb(
     DDPM: number): number {
       const defStealRate = defensiveTeam.reduce((total, player) => total + player.stealRate, 0);
       const playerTurnoverProb = possessionEndingPlayer.turnoverRate / possessionEndingPlayer.usageRate
-      const turnoverProb = playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM)/100; // should prob be team
+      const turnoverProb = playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM)/25; // should prob be team
 
       return turnoverProb
     }
@@ -477,7 +477,7 @@ function takeShot(
       break;
   }
 
-  possessionConst += ODPM / 100 + DDPM / 100;
+  possessionConst += ODPM / 25 - DDPM / 25;
 
   if (shotType === "two") {
     if (Math.random() < player.twoPointPercentage * foulPenalty * possessionConst) {
