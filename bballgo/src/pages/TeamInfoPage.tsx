@@ -71,7 +71,7 @@ const TeamInfoPage = () => {
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.threePointShotsMade * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsTaken * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsMade * per36Multiplier).toFixed(1)}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*100/player.stats.poss).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*200/player.stats.poss).toFixed(1)}</td>
       </tr>
     );
   })}
