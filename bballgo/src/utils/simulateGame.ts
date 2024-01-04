@@ -276,15 +276,16 @@ function genIsAssist(weights: Weights): boolean {
     //   } else {
 
 // }
-
-
+const STL_PER_100 = .075;
 function genTurnoverProb(  
     defensiveTeam: PlayerRatings[],
     possessionEndingPlayer: PlayerRatings,
-    weights: Weights): number {
-      const defStealRate = defensiveTeam.reduce((total, player) => total + player.stealRate, 0) / defensiveTeam.length;
+    ODPM: number,
+    DDPM: number): number {
+      const defStealRate = defensiveTeam.reduce((total, player) => total + player.stealRate, 0);
       const playerTurnoverProb = possessionEndingPlayer.turnoverRate / possessionEndingPlayer.usageRate
-      const turnoverProb = weights.TO * playerTurnoverProb + defStealRate / 4; // should prob be team
+      const turnoverProb = playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM)/100; // should prob be team
+
       return turnoverProb
     }
 
@@ -302,10 +303,17 @@ function simulatePossession(
   );
   let possessionEndingPlayer: PlayerRatings = offensiveTeam[possessionEndingIndex];
 
+  const ODPM = offensiveTeam.map((player) => player.nonBoxODPM).reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+  }, 0) / 5;
+  const DDPM = defensiveTeam.map((player) => player.nonBoxDDPM).reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+  }, 0) / 5;
+
   const defensiveFoulFloorProb =
     weights.DEF_FOUL_FLOOR * genDefensiveFoulProb(defensiveTeam);
 
-   const turnoverProb = genTurnoverProb(defensiveTeam, possessionEndingPlayer, weights)
+   const turnoverProb = genTurnoverProb(defensiveTeam, possessionEndingPlayer, ODPM, DDPM)
 
   const offensiveFoulProb =
     weights.OFF_FOUL * possessionEndingPlayer.foulRate;
@@ -370,7 +378,7 @@ function simulatePossession(
           0
         ) / offensiveTeam.length;
 
-      const is_oreb = Math.random() * 50 < oreb;
+      const is_oreb = Math.random() < oreb;
 
       if (is_oreb) {
         scoreBoard.boxScore[genOffensiveRebounder(offensiveTeam)].offReb += 1;
@@ -403,10 +411,12 @@ function genShotType(player: PlayerRatings): "two" | "three" {
 }
 
 function genIsFoul(shotType: "two" | "three", player: PlayerRatings) {
+  const ft = player.freeThrowRate / 2;
+  const ftShotsPerFG = ft / (player.threePointAttemptRate + player.twoPointAttemptRate);
   if (shotType == "two") {
-    return Math.random() < player.freeThrowRate / 1.5;
+    return Math.random() < ftShotsPerFG * 1.2;
   } else {
-    return Math.random() < player.freeThrowRate / 3;
+    return Math.random() < ftShotsPerFG / 1.8;
   }
 }
 
@@ -436,10 +446,13 @@ function takeShot(
   isFoul: boolean,
   scoreBoard: ScoreBoard,
   fouler: string,
-  prevPossessionEnd: PossessionStart
+  prevPossessionEnd: PossessionStart,
+  ODPM: number,
+  DDPM: number
 ): "make" | "miss" {
   const foulPenalty = isFoul ? 0.3 : 1;
   let possessionConst = 1;
+
   switch(prevPossessionEnd) {
     case PossessionStart.Make:
       possessionConst *= 0.9815;
@@ -464,6 +477,7 @@ function takeShot(
       break;
   }
 
+  possessionConst += ODPM / 100 + DDPM / 100;
 
   if (shotType === "two") {
     if (Math.random() < player.twoPointPercentage * foulPenalty * possessionConst) {
@@ -516,8 +530,14 @@ function simulateShot(
   const isFoul: boolean = genIsFoul(shotType, player);
   const foulRates = defensiveTeam.map((player) => player.foulRate);
   const fouler = defensiveTeam[getIndexFromWeights(foulRates)].name
+  const ODPM = offensiveTeam.map((player) => player.nonBoxODPM).reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+  }, 0) / 5;
+  const DDPM = defensiveTeam.map((player) => player.nonBoxDDPM).reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+  }, 0) / 5;
 
-  return takeShot(player, shotType, isFoul, scoreBoard, fouler, prevPossessionEnd);
+  return takeShot(player, shotType, isFoul, scoreBoard, fouler, prevPossessionEnd, ODPM, DDPM);
 }
 
 function genDefensiveFoulProb(defensiveTeam: PlayerRatings[]): number {

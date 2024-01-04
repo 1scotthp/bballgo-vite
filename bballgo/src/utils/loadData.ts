@@ -129,7 +129,7 @@ const loadPlayerData = async (contractDict: any) => {
         threePointAttemptRate: parseFloat(item["FG3A/100"]) / 100,
         twoPointAttemptRate:
           (parseFloat(item["FGA/100"]) - parseFloat(item["FG3A/100"])) / 100,
-        freeThrowRate: parseFloat(item["FTA/100"])/100,
+        freeThrowRate: parseFloat(item["FTA/100"]) / 100,
         stealRate: parseFloat(item["STL/100"]) / 100,
         blockRate: parseFloat(item["BLK/100"]) / 100,
         twoPointPercentage: parseFloat(item["FG2%"]),
