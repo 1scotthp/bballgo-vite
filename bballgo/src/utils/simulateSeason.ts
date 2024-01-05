@@ -48,12 +48,12 @@ const teamAbbrs = [
 //   }
 
   function generateFixedSchedule(): [string, string][] {
-    const totalRounds = 12;
+    const totalRounds = 2;
     const schedule: [string, string][] = [];
   
     // Generate each unique matchup
-    for (let i = 0; i < teamAbbrs.length; i++) {
-      for (let j = i + 1; j < teamAbbrs.length; j++) {
+    for (let i = 0; i < teamAbbrs.length / 3; i++) {
+      for (let j = i + 1; j < teamAbbrs.length / 3; j++) {
         const team1 = teamAbbrs[i];
         const team2 = teamAbbrs[j];
   

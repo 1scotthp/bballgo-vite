@@ -7,7 +7,9 @@ type SeasonData = {
     boxScores: ScoreBoard[];
     updateBoxScores: (newBoxScores: ScoreBoard[]) => void;
     tradePlayers: (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => void,
-    userTeam: string
+    userTeam: string,
+    rapm: Record<string, number>,
+    setRapm: (r: Record<string, number>) => void
   };
   
   export const TeamsContext = createContext<SeasonData>({
@@ -15,7 +17,9 @@ type SeasonData = {
     boxScores: [],
     updateBoxScores: () => {},
     tradePlayers: ([], []) => {},
-    userTeam: "MIL"
+    userTeam: "MIL",
+    rapm: {},
+    setRapm: () => {},
   });
   
   
@@ -27,6 +31,7 @@ type TeamsProviderProps = {
     const [teams, setTeams] = useState<Team[]>([]);
     const [boxScores, setBoxScores] = useState<ScoreBoard[]>([]);
     const [userTeam, _] = useState<string>("MIL")
+    const [rapm, setRapm] = useState<Record<string, number>>({})
 
   
     useEffect(() => {
@@ -37,6 +42,7 @@ type TeamsProviderProps = {
       if(teams.length === 0){
         fetchTeams().catch(console.error);
       }
+
 
     }, []);
 
@@ -91,7 +97,7 @@ type TeamsProviderProps = {
       
     
       return (
-        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers }}>
+        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers, rapm, setRapm }}>
           {children}
         </TeamsContext.Provider>
       );

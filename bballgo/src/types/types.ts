@@ -65,6 +65,7 @@ export interface HeadCell<T> {
     nonBoxODPM: number;
     nonBoxDDPM: number;
     fatigue: number;
+    rID: number,
   };
   
   export type PlayerRosterView = {
@@ -155,6 +156,7 @@ export type Weights = {
     timeRemaining: number;
     boxScore: { [playerName: string]: PlayerBoxScore };
     playByPlay: Play[];
+    rapmInput: number[][];
   };
   
   export type PlayerBoxScore = {

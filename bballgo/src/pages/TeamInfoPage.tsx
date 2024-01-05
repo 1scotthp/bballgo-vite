@@ -1,9 +1,12 @@
 import React, { useContext, useState } from 'react';
 import { TeamsContext } from '../TeamsProvider';
+import { ScoreBoard } from '../types/types';
+import {runRAPM } from '../utils/rapm.js'
+
 
 
 const TeamInfoPage = () => {
-  const {teams, userTeam} = useContext(TeamsContext);
+  const {teams, userTeam, boxScores, setRapm, rapm} = useContext(TeamsContext);
   const [selectedTeamAbbr, setSelectedTeamAbbr] = useState(userTeam);
 
   const handleTeamSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -11,6 +14,33 @@ const TeamInfoPage = () => {
   };
 
   const selectedTeam = teams.find(team => team.teamAbbreviation === selectedTeamAbbr);
+
+  const runRapm = () => {
+  
+  const big2DArray: number[][] = boxScores.reduce((accumulator: number[][], currentBoxScore: ScoreBoard) => {
+      return accumulator.concat(currentBoxScore.rapmInput);
+  }, []);
+     const result = runRAPM(big2DArray)
+     console.log(result);
+     const playerMap: Record<string, number> = {};
+     teams.forEach((team) => {
+      team.roster.forEach((player) => {
+        playerMap[player.name] = result[player.ratings.rID + 1]
+      })
+     })
+
+     setRapm(playerMap);
+
+
+// //      // Convert the playerMap to an array, sort it, and then display
+// const sortedPlayerMapArray = Object.entries(playerMap)
+// .sort((a, b) => b[1] - a[1]); // Sorting based on the coefficient value
+
+// // If you want to display it as an array
+// console.log(sortedPlayerMapArray);
+
+
+  }
 
   return (
 <div style={{ maxWidth: '800px', margin: 'auto' }}>
@@ -24,6 +54,7 @@ const TeamInfoPage = () => {
     ))}
   </select>
   <p>All stats per 36 mins</p>
+  <button onClick={() => runRapm()}></button>
 
   {selectedTeam && (
   <div>
@@ -72,6 +103,7 @@ const TeamInfoPage = () => {
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsTaken * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsMade * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*200/player.stats.poss).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{rapm[player.name]}</td>
       </tr>
     );
   })}

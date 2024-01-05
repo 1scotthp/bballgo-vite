@@ -119,12 +119,14 @@ const loadPlayerData = async (contractDict: any) => {
     const response = await fetch(playerCSV)
     const csvText = await response.text();
     const rawData = await csvtojson().fromString(csvText);
+    let id = 1;
 
   
     rawData.forEach((item: any) => {
       const ratings: PlayerRatings = {
         name: item.player_name,
         id: parseInt(item.nba_id),
+        rID: id,
         usageRate: parseFloat(item["USG%"]),
         threePointAttemptRate: parseFloat(item["FG3A/100"]) / 100,
         twoPointAttemptRate:
@@ -191,6 +193,7 @@ const loadPlayerData = async (contractDict: any) => {
           } };
         }
         teams[teamAbbr].roster.push(player);
+        id += 1;
         
     });
     
