@@ -21,11 +21,11 @@ const TeamInfoPage = () => {
       return accumulator.concat(currentBoxScore.rapmInput);
   }, []);
      const result = runRAPM(big2DArray)
-     console.log(result);
+     console.log('res', result);
      const playerMap: Record<string, number> = {};
      teams.forEach((team) => {
       team.roster.forEach((player) => {
-        playerMap[player.name] = result[player.ratings.rID + 1]
+        playerMap[player.name] = result[player.ratings.rID]
       })
      })
 

@@ -51,9 +51,10 @@ const teamAbbrs = [
     const totalRounds = 2;
     const schedule: [string, string][] = [];
   
+    console.log("HERE");
     // Generate each unique matchup
-    for (let i = 0; i < teamAbbrs.length / 3; i++) {
-      for (let j = i + 1; j < teamAbbrs.length / 3; j++) {
+    for (let i = 0; i < teamAbbrs.length / 4; i++) {
+      for (let j = i + 1; j < teamAbbrs.length / 4; j++) {
         const team1 = teamAbbrs[i];
         const team2 = teamAbbrs[j];
   
@@ -63,6 +64,7 @@ const teamAbbrs = [
         }
       }
     }
+    console.log(schedule);
   
     return schedule;
   }
