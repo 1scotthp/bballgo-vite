@@ -1,13 +1,10 @@
 import { useContext, useEffect, useState} from 'react';
-import * as React from 'react';
 
 import { TeamsContext } from '../TeamsProvider';
 import { Player } from '../types/types';
 import { runRPM,} from '../utils/simulateSeason';
-import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
-
 const RandomPlusMinus = () => {
-  const {teams, updateBoxScores, setTeams} = useContext(TeamsContext);
+  const {teams, updateBoxScores} = useContext(TeamsContext);
   const [players, setPlayers] = useState<Player[]>()
   const [oRTG, setORTG] = useState(1);
   const [dRTG, setDRTG] = useState(1);

@@ -2,7 +2,7 @@ import { db } from "../db";
 import contractsCSV from '../data/NBA_Contracts_Player.csv?url';
 import playerCSV from "../data/NBA_Player_Data_22_23.csv?url"
 import { Player, PlayerRatings, Team } from "../types/types";
-import csvtojson from 'csvtojson';
+import * as csvtojson from 'csvtojson';
 
 
 type ContractAmounts = { [year: string]: number };
