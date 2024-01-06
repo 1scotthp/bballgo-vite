@@ -51,10 +51,9 @@ const teamAbbrs = [
     const totalRounds = 2;
     const schedule: [string, string][] = [];
   
-    console.log("HERE");
     // Generate each unique matchup
-    for (let i = 0; i < teamAbbrs.length / 4; i++) {
-      for (let j = i + 1; j < teamAbbrs.length / 4; j++) {
+    for (let i = 0; i < teamAbbrs.length; i++) {
+      for (let j = i + 1; j < teamAbbrs.length; j++) {
         const team1 = teamAbbrs[i];
         const team2 = teamAbbrs[j];
   
@@ -64,12 +63,38 @@ const teamAbbrs = [
         }
       }
     }
-    console.log(schedule);
-  
+
     return schedule;
   }
   
   
+
+  export function runRPM(teams: Team[], seasons: number): ScoreBoard[] {
+    let scoreBoards: ScoreBoard[] = [];
+    // const teamNames = teamAbbrs.filter((abbr) => abbr.length > 1);
+    let players = teams.flatMap(team => team.roster);
+    teams = teams.filter((team) => team.teamAbbreviation.length > 2);
+
+    for (let runs = 0; runs < seasons; runs++){
+      console.log("SIM SEASON", runs);
+      // Step 2: Shuffle the players array
+      players = teams.flatMap(team => team.roster);
+      for (let i = players.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [players[i], players[j]] = [players[j], players[i]];
+      }
+
+      // Step 3: Assign players to teams
+      teams.forEach(team => {
+        const rosterSize = team.roster.length;
+        team.roster = players.splice(0, rosterSize);
+      });
+      scoreBoards = scoreBoards.concat(runSeason(teams));
+    }
+
+    return scoreBoards
+
+  }
   
 
   export function runSeason(teams: Team[]): ScoreBoard[] {

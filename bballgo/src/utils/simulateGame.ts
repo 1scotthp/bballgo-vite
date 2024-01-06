@@ -190,11 +190,11 @@ export function simulateGame(
       );
     
             // Assuming offense and defense arrays have 5 elements each
-        scoreBoard.rapmInput.push([
-            points, 
-            offense[0].rID, offense[1].rID, offense[2].rID, offense[3].rID, offense[4].rID,
-            defense[0].rID, defense[1].rID, defense[2].rID, defense[3].rID, defense[4].rID
-        ]);
+        // scoreBoard.rapmInput.push([
+        //     points, 
+        //     offense[0].rID, offense[1].rID, offense[2].rID, offense[3].rID, offense[4].rID,
+        //     defense[0].rID, defense[1].rID, defense[2].rID, defense[3].rID, defense[4].rID
+        // ]);
 
     
 

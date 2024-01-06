@@ -1,59 +1,77 @@
-import React, { useContext, useState } from 'react';
+import { useContext, useEffect, useState} from 'react';
+
 import { TeamsContext } from '../TeamsProvider';
-// import {runRAPM } from '../testing/rapm.js'
+import { Player } from '../types/types';
+import { runRPM,} from '../utils/simulateSeason';
+
+const RandomPlusMinus = () => {
+  const {teams, updateBoxScores} = useContext(TeamsContext);
+  const [players, setPlayers] = useState<Player[]>()
+  const [oRTG, setORTG] = useState(1);
+  const [dRTG, setDRTG] = useState(1);
+  const [minMins, setMinMins] = useState(1);
+
+    const sim = () => {
+        const result = runRPM(teams, 30)
+        updateBoxScores(result);
+    }
+
+    
+    const handleMinMinsChange = (event: any) => {
+        setMinMins(event.target.value);
+      };
 
 
+    useEffect(() => {
+        const playerArr = teams.flatMap(team => team.roster)
+            .filter(player => player.stats && !isNaN(player.stats.teamPointsScored) && !isNaN(player.stats.teamPointsAgainst) && player.stats.mins > minMins);
 
-const TeamInfoPage = () => {
-  const {teams, userTeam, rapm} = useContext(TeamsContext);
-  const [selectedTeamAbbr, setSelectedTeamAbbr] = useState(userTeam);
+    
+        const sortedPlayers = [...playerArr].sort((a, b) => {
+            const diffA = (a.stats.teamPointsScored - a.stats.teamPointsAgainst)*200/a.stats.poss;
+            const diffB = (b.stats.teamPointsScored - b.stats.teamPointsAgainst)*200/b.stats.poss;
+    
+            return diffB - diffA;
+        });
+        setPlayers(sortedPlayers);
 
-  const handleTeamSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTeamAbbr(e.target.value);
-  };
+        let oSum: number = 0
+        let dSum: number = 0;
+        sortedPlayers.map((player)=> {
+            oSum += player.stats.teamPointsScored*200/player.stats.poss;
+            dSum += player.stats.teamPointsAgainst*200/player.stats.poss;
+        })
 
-  const selectedTeam = teams.find(team => team.teamAbbreviation === selectedTeamAbbr);
+        setORTG(oSum/sortedPlayers.length);
+        setDRTG(dSum/sortedPlayers.length);
+    }, [teams, minMins]);
 
-  // const runRapm = () => {
-  
-  // const big2DArray: number[][] = boxScores.reduce((accumulator: number[][], currentBoxScore: ScoreBoard) => {
-  //     return accumulator.concat(currentBoxScore.rapmInput);
-  // }, []);
-  //    const result = runRAPM(big2DArray)
-  //    console.log('res', result);
-  //    const playerMap: Record<string, number> = {};
-  //    teams.forEach((team) => {
-  //     team.roster.forEach((player) => {
-  //       playerMap[player.name] = result[player.ratings.rID]
-  //     })
-  //    })
 
-  //    setRapm(playerMap);
+      return (
+        <div>
+         <button onClick={() => sim()}> Run!</button>
+          <h1>Random Plus Minus</h1>
 
-  // }
-
-  return (
-<div style={{ maxWidth: '800px', margin: 'auto' }}>
-  <h1>Team Information</h1>
-  <select onChange={handleTeamSelection} value={selectedTeamAbbr} style={{ width: '100%', padding: '10px', marginBottom: '20px' }}>
-    <option value="">Select a Team</option>
-    {teams.map(team => (
-      <option key={team.teamAbbreviation} value={team.teamAbbreviation}>
-        {team.teamAbbreviation}
-      </option>
-    ))}
-  </select>
-  <p>All stats per 36 mins</p>
-  {/* <button onClick={() => runRapm()}></button> */}
-
-  {selectedTeam && (
-  <div>
-    <h2>{selectedTeam.teamAbbreviation}</h2>
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-    <thead>
+          <div>
+        <label htmlFor="minMins">Minimum Minutes: {minMins}</label>
+        <input 
+          type="range" 
+          id="minMins" 
+          name="minMins" 
+          min="1" 
+          max="10000" 
+          value={minMins} 
+          onChange={handleMinMinsChange} 
+        />
+      </div>
+          <table>
+          <thead>
   <tr>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Name</th>
-    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Mins/game</th>
+    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>RPM</th>
+    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>ORPM</th>
+    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>DRPM</th>
+    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Mins</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Pts/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Reb/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>Ast/36</th>
@@ -67,18 +85,20 @@ const TeamInfoPage = () => {
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>3PTM/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>FTA/36</th>
     <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>FTM/36</th>
-    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#82f2f2' }}>+/-</th>
   </tr>
 </thead>
-
-      <tbody>
-  {selectedTeam.roster.sort((a, b) => b.stats.mins - a.stats.mins).map(player => {
+            <tbody>
+  {players?.map(player => {
     const per36Multiplier = player.stats.mins ? 36 / player.stats.mins : 0;
-
     return (
-      <tr key={player.id}>
+      <tr key={player.ratings.rID}>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{player.name}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins / 87 / 4).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*200/player.stats.poss).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored)*200/player.stats.poss - oRTG).toFixed(1)}</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+    { (1 - ((player.stats.teamPointsAgainst * 200 / player.stats.poss) - dRTG)).toFixed(1) }
+</td>
+        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.points * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.offReb + player.stats.defReb) * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.assists * per36Multiplier).toFixed(1)}</td>
@@ -92,20 +112,14 @@ const TeamInfoPage = () => {
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.threePointShotsMade * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsTaken * per36Multiplier).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.freeThrowsMade * per36Multiplier).toFixed(1)}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*200/player.stats.poss).toFixed(1)}</td>
-        <td style={{ border: '1px solid #ddd', padding: '8px' }}>{rapm[player.name]}</td>
       </tr>
     );
   })}
 </tbody>
+          </table>
+        </div>
+      );
 
-    </table>
-  </div>
-)}
-
-</div>
-
-  );
 };
-
-export default TeamInfoPage;
+  
+export default RandomPlusMinus;
