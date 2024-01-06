@@ -1,15 +1,18 @@
 import { useContext, useEffect, useState} from 'react';
+import * as React from 'react';
 
 import { TeamsContext } from '../TeamsProvider';
 import { Player } from '../types/types';
 import { runRPM,} from '../utils/simulateSeason';
+import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 
 const RandomPlusMinus = () => {
-  const {teams, updateBoxScores} = useContext(TeamsContext);
+  const {teams, updateBoxScores, setTeams} = useContext(TeamsContext);
   const [players, setPlayers] = useState<Player[]>()
   const [oRTG, setORTG] = useState(1);
   const [dRTG, setDRTG] = useState(1);
   const [minMins, setMinMins] = useState(1);
+  
 
     const sim = () => {
         const result = runRPM(teams, 30)
@@ -42,8 +45,14 @@ const RandomPlusMinus = () => {
             dSum += player.stats.teamPointsAgainst*200/player.stats.poss;
         })
 
-        setORTG(oSum/sortedPlayers.length);
-        setDRTG(dSum/sortedPlayers.length);
+        const o = oSum/sortedPlayers.length;
+        const d = dSum/sortedPlayers.length;
+        setORTG(o);
+        setDRTG(d);
+
+        console.log(o, d);
+
+
     }, [teams, minMins]);
 
 
@@ -96,7 +105,7 @@ const RandomPlusMinus = () => {
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored - player.stats.teamPointsAgainst)*200/player.stats.poss).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{((player.stats.teamPointsScored)*200/player.stats.poss - oRTG).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-    { (1 - ((player.stats.teamPointsAgainst * 200 / player.stats.poss) - dRTG)).toFixed(1) }
+    { (-(player.stats.teamPointsAgainst * 200 / player.stats.poss) + dRTG).toFixed(1) }
 </td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.mins).toFixed(1)}</td>
         <td style={{ border: '1px solid #ddd', padding: '8px' }}>{(player.stats.points * per36Multiplier).toFixed(1)}</td>

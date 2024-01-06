@@ -100,6 +100,8 @@ const teamAbbrs = [
   export function runSeason(teams: Team[]): ScoreBoard[] {
     const nbaSchedule = generateFixedSchedule();
     const boxScores: (ScoreBoard | undefined)[] = [];
+
+    console.log("TEAMS", teams.length)
   
 
     nbaSchedule.forEach(([homeTeamAbbr, awayTeamAbbr]) => {

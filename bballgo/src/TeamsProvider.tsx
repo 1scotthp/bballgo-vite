@@ -4,6 +4,7 @@ import { PlayerBoxScore, ScoreBoard, Team, TeamsStandingStats } from "./types/ty
 
 type SeasonData = {
     teams: Team[];
+    setTeams: (teams: Team[]) => void;
     boxScores: ScoreBoard[];
     updateBoxScores: (newBoxScores: ScoreBoard[]) => void;
     tradePlayers: (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => void,
@@ -14,6 +15,7 @@ type SeasonData = {
   
   export const TeamsContext = createContext<SeasonData>({
     teams: [],
+    setTeams: () => {},
     boxScores: [],
     updateBoxScores: () => {},
     tradePlayers: ([], []) => {},
@@ -51,6 +53,7 @@ type TeamsProviderProps = {
         setBoxScores(newBoxScores);
         const teamStats = calculateTeamStats(newBoxScores);
         const playerStats = calculatePlayerStats(newBoxScores);
+        
       
         const updatedTeams = teams.map(team => {
           return {
@@ -97,7 +100,7 @@ type TeamsProviderProps = {
       
     
       return (
-        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers, rapm, setRapm }}>
+        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers, rapm, setRapm , setTeams}}>
           {children}
         </TeamsContext.Provider>
       );

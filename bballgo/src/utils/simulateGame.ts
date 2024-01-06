@@ -161,6 +161,7 @@ export function simulateGame(
   let posCount = 0;
   let prevPossessionEnd = PossessionStart.Timeout;
   let points = 0;
+  let points2 = 0
   while (timeRemaining > 0) {
     let possessionLength = 0;
 
@@ -171,11 +172,13 @@ export function simulateGame(
     [prevPossessionEnd, points] = simulatePossession(offense, defense, weights, scoreBoard, prevPossessionEnd);
     posCount += 1;
 
+    points2 = 0;
     while (prevPossessionEnd === PossessionStart.Oreb || prevPossessionEnd === PossessionStart.DefFoulFloor) {
-        [prevPossessionEnd, points] = simulatePossession(homeOnCourt, awayOnCourt, weights, scoreBoard, prevPossessionEnd);
+        [prevPossessionEnd, points2] = simulatePossession(homeOnCourt, awayOnCourt, weights, scoreBoard, prevPossessionEnd);
         possessionLength +=
             simulatePossessionTime(prevPossessionEnd) * weights.POSS_LENGTH;
     }
+    points += points2;
 
     offense.forEach(
         (player) => {
@@ -195,9 +198,6 @@ export function simulateGame(
         //     offense[0].rID, offense[1].rID, offense[2].rID, offense[3].rID, offense[4].rID,
         //     defense[0].rID, defense[1].rID, defense[2].rID, defense[3].rID, defense[4].rID
         // ]);
-
-    
-
 
     homeOnCourt.forEach(
       (player) => {
