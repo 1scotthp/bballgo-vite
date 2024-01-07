@@ -20,11 +20,11 @@ const Game = () => {
   const [team1Name, team2Name] = Array.from(teamNames);
   const team1: PlayerBoxScore[] = players.filter(
     (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team1Name && playerBoxScore.mins > 0.1
+      playerBoxScore.teamAbbr === team1Name && playerBoxScore.mins
   );
   const team2: PlayerBoxScore[] = players.filter(
     (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team2Name && playerBoxScore.mins > 0.1
+      playerBoxScore.teamAbbr === team2Name && playerBoxScore.mins
   );
 
   let team1Score = 0;
