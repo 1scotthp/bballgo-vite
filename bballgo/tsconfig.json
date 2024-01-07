@@ -11,6 +11,7 @@
     "skipLibCheck": true,
     /* Bundler mode */
     // "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
