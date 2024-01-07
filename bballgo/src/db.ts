@@ -1,6 +1,6 @@
 // db.ts
 import Dexie, { Table } from "dexie";
-import {Player, PlayerStats, Team } from "./types/types";
+import { Player, PlayerStats, Team } from "./types/types";
 import { Contract } from "./utils/loadData";
 
 export interface Friend {
@@ -8,7 +8,6 @@ export interface Friend {
   name: string;
   age: number;
 }
-
 
 export class MySubClassedDexie extends Dexie {
   friends!: Table<Friend>;
@@ -20,11 +19,11 @@ export class MySubClassedDexie extends Dexie {
     teamData: { team: string; players: PlayerStats[]; points: number }[];
   }>;
   contracts!: Table<Contract>;
-    teams: Table<Team>;
+  teams: Table<Team>;
 
   constructor() {
     super("myDatabase");
-    this.version(5).stores({
+    this.version(7).stores({
       teams: "teamAbbreviation",
       players: "name, teamAbbr",
       // Add the games table to the store with 'id' as primary key

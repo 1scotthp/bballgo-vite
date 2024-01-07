@@ -105,7 +105,6 @@ export const loadContractData = async () => {
   const csvData = await response.text();
   const contracts = await parseInputData(csvData); // Parse the data
   const contractsMap = contracts.reduce((map, contract) => {
-    console.log(contract.name);
     map[contract.name] = {
       name: contract.name,
       team: contract.team,
@@ -214,6 +213,8 @@ const loadPlayerData = async (contractDict: any) => {
   });
 
   const teamValues = Object.values(teams);
+  console.log(teamValues);
+  console.log(await db.tables);
   await db.teams.bulkPut(teamValues);
 };
 
