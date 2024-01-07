@@ -23,7 +23,7 @@ export class MySubClassedDexie extends Dexie {
 
   constructor() {
     super("myDatabase");
-    this.version(7).stores({
+    this.version(8).stores({
       teams: "teamAbbreviation",
       players: "name, teamAbbr",
       // Add the games table to the store with 'id' as primary key
