@@ -12,7 +12,7 @@ const Game = () => {
   const increment = () => setI((prev) => prev + 1);
   const decrement = () => setI((prev) => prev - 1);
 
-  const teamNames = new Set();
+  const teamNames: Set<string> = new Set();
   players.forEach((playerBoxScore) => {
     teamNames.add(playerBoxScore.teamAbbr);
   });
@@ -20,14 +20,20 @@ const Game = () => {
   const [team1Name, team2Name] = Array.from(teamNames);
   const team1: PlayerBoxScore[] = players.filter(
     (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team1Name && playerBoxScore.mins > 1
+      playerBoxScore.teamAbbr === team1Name && playerBoxScore.mins > 0.1
   );
   const team2: PlayerBoxScore[] = players.filter(
     (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team2Name && playerBoxScore.mins > 1
+      playerBoxScore.teamAbbr === team2Name && playerBoxScore.mins > 0.1
   );
 
-  console.log(playByPlay);
+  let team1Score = 0;
+  let team2Score = 0;
+  team1.map((p) => (team1Score += p.teamPointsScored));
+  team2.map((p) => (team2Score += p.teamPointsScored));
+
+  let team1Score2 = 0;
+  team1.map((p) => (team1Score2 += p.points));
 
   return (
     <div>
@@ -36,6 +42,8 @@ const Game = () => {
       <button onClick={increment}>&gt;</button> {/* Right arrow button */}
       <div style={{ display: "flex", justifyContent: "space-around" }}>
         <div>
+          {team1Name}: {team1Score / 5} OR {team1Score2} ----- {team2Name} :{" "}
+          {team2Score / 5}
           <StatsTable players={team1} />
           <StatsTable players={team2} />
         </div>
