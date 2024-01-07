@@ -501,7 +501,7 @@ function simulatePossession(
       const adj = (oreb - dreb) / 2 + (ODPM - DDPM) / 50;
 
       const is_oreb =
-        Math.random() < (adj / 50) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE;
+        Math.random() < (adj / 50) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE * 0;
 
       if (is_oreb) {
         // play by play here
