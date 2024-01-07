@@ -10,29 +10,29 @@ export interface Friend {
 }
 
 export class MySubClassedDexie extends Dexie {
-  friends!: Table<Friend>;
+  // friends!: Table<Friend>;
   players!: Table<Player>;
 
   // Add the games table
-  games!: Table<{
-    id: number;
-    teamData: { team: string; players: PlayerStats[]; points: number }[];
-  }>;
+  // games!: Table<{
+  //   id: number;
+  //   teamData: { team: string; players: PlayerStats[]; points: number }[];
+  // }>;
   contracts!: Table<Contract>;
   teams: Table<Team>;
 
   constructor() {
     super("myDatabase");
-    this.version(8).stores({
+    this.version(10).stores({
       teams: "teamAbbreviation",
       players: "name",
       // Add the games table to the store with 'id' as primary key
-      games: "id",
+      // games: "id",
       contracts: "name",
     });
     this.teams = this.table("teams");
     this.players = this.table("players");
-    this.games = this.table("games");
+    // this.games = this.table("games");
     this.contracts = this.table("contracts");
   }
 }
