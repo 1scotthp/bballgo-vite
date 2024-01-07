@@ -6,7 +6,6 @@ import {
   Weights,
   PlayerBoxScore,
   PossessionStart,
-  PlayByPlayPoss,
 } from "../types/types";
 
 // const: -15.5213 + fga_per_100_poss: 2.6721 + x3pa_per_100_poss: 0.1710 + fg_percent: 38.4119 + fta_per_100_poss: 1.6870 + ft_percent: 8.8982 + usg_percent: -2.3688 + ast_per_100_poss: 0.9554 + stl_per_100_poss: 0.4940 + Non Box O-DPM: 0.8181 + Non Box D-DPM: 1.7782
@@ -327,25 +326,27 @@ function genIsAssist(weights: Weights): boolean {
 //   } else {
 
 // }
-const STL_PER_100 = 0.075;
+const STL_PER_POSS = 0.075;
 const REBOUNDING_MULTIPLIER = 1;
+const STL_PER_TO = 0.5;
 const OFF_REB_CHANCE = 0.2;
 function genTurnoverProb(
-  defensiveTeam: PlayerRatings[],
+  // defensiveTeam: PlayerRatings[],
   possessionEndingPlayer: PlayerRatings,
   ODPM: number,
-  DDPM: number
-): number {
-  const defStealRate = defensiveTeam.reduce(
-    (total, player) => total + player.stealRate,
-    0
-  );
+  DDPM: number,
+  defStealRate: number
+): [number, number] {
   const playerTurnoverProb =
     possessionEndingPlayer.turnoverRate / possessionEndingPlayer.usageRate;
-  const turnoverProb =
-    playerTurnoverProb + (defStealRate - STL_PER_100) + (DDPM - ODPM) / 50; // should prob be team
 
-  return turnoverProb;
+  const stlsAboveAveragePerPoss = defStealRate - STL_PER_POSS;
+  const turnoverProb =
+    playerTurnoverProb + stlsAboveAveragePerPoss / 2 + (DDPM - ODPM) / 50; // should prob be team
+
+  const stealProb = defStealRate * STL_PER_TO;
+
+  return [turnoverProb - stealProb, stealProb];
 }
 
 // fix offensive rebounds off of FTs
@@ -377,14 +378,20 @@ function simulatePossession(
         return accumulator + currentValue;
       }, 0) / 5;
 
+  const defStealRate = defensiveTeam.reduce(
+    (total, player) => total + player.stealRate,
+    0
+  );
+
   const defensiveFoulFloorProb =
     weights.DEF_FOUL_FLOOR * genDefensiveFoulProb(defensiveTeam);
 
-  const turnoverProb = genTurnoverProb(
-    defensiveTeam,
+  const [turnoverProb, stealProb] = genTurnoverProb(
+    // defensiveTeam,
     possessionEndingPlayer,
     ODPM,
-    DDPM
+    DDPM,
+    defStealRate
   );
 
   const offensiveFoulProb = weights.OFF_FOUL * possessionEndingPlayer.foulRate;
@@ -394,6 +401,7 @@ function simulatePossession(
   const i = getIndexFromWeights([
     defensiveFoulFloorProb,
     turnoverProb,
+    stealProb,
     offensiveFoulProb,
     shotAttemptProb,
   ]);
@@ -401,6 +409,7 @@ function simulatePossession(
   const outcome = [
     PossessionOutcome.DefensiveFoul,
     PossessionOutcome.Turnover,
+    PossessionOutcome.Steal,
     PossessionOutcome.OffensiveFoul,
     null,
   ][i];
@@ -422,21 +431,6 @@ function simulatePossession(
     });
     return [PossessionStart.DefFoulFloor, 0];
   } else if (outcome === PossessionOutcome.Turnover) {
-    const stlRates = defensiveTeam.map((player) => player.stealRate);
-    const defensivePlayer = defensiveTeam[getIndexFromWeights(stlRates)].name;
-    if (Math.random() < 0.5 * weights.STL) {
-      scoreBoard.boxScore[defensivePlayer].steals += 1;
-      scoreBoard.playByPlay.push({
-        quarter: scoreBoard.quarter,
-        play:
-          "Steal by  " +
-          defensivePlayer +
-          ". Turnover by " +
-          possessionEndingPlayer.name,
-        timeRemaining: scoreBoard.timeRemaining,
-      });
-      return [PossessionStart.Steal, 0];
-    }
     scoreBoard.boxScore[possessionEndingPlayer.name].turnovers += 1;
     scoreBoard.playByPlay.push({
       quarter: scoreBoard.quarter,
@@ -444,6 +438,20 @@ function simulatePossession(
       timeRemaining: scoreBoard.timeRemaining,
     });
     return [PossessionStart.DeadBall, 0];
+  } else if (outcome === PossessionOutcome.Steal) {
+    const stlRates = defensiveTeam.map((player) => player.stealRate);
+    const defensivePlayer = defensiveTeam[getIndexFromWeights(stlRates)].name;
+    scoreBoard.boxScore[defensivePlayer].steals += 1;
+    scoreBoard.playByPlay.push({
+      quarter: scoreBoard.quarter,
+      play:
+        "Steal by  " +
+        defensivePlayer +
+        ". Turnover by " +
+        possessionEndingPlayer.name,
+      timeRemaining: scoreBoard.timeRemaining,
+    });
+    return [PossessionStart.Steal, 0];
   } else if (outcome === PossessionOutcome.OffensiveFoul) {
     scoreBoard.boxScore[possessionEndingPlayer.name].fouls += 1;
     scoreBoard.boxScore[possessionEndingPlayer.name].turnovers += 1;
@@ -490,10 +498,10 @@ function simulatePossession(
         0
       );
 
-      const adj = (oreb + dreb) / 2 + (ODPM - DDPM) / 50;
+      const adj = (oreb - dreb) / 2 + (ODPM - DDPM) / 50;
 
       const is_oreb =
-        Math.random() < (adj / 10) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE;
+        Math.random() < (adj / 25) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE;
 
       if (is_oreb) {
         // play by play here
@@ -533,8 +541,9 @@ function genShotType(
   ODPM: number
 ): "two" | "three" {
   const shotType = Math.random();
+  const adj = OAST / 2 + DDPM / 100 - ODPM / 100;
   const ratio =
-    (player.twoPointAttemptRate - OAST / 2 + DDPM / 100 - ODPM / 100) /
+    (player.twoPointAttemptRate - adj / 5) /
     (player.twoPointAttemptRate + player.threePointAttemptRate);
   if (shotType < ratio) {
     return "two";
@@ -548,7 +557,7 @@ function genIsFoul(
   player: PlayerRatings,
   defense: PlayerRatings[]
 ) {
-  const ft = player.freeThrowRate / 2;
+  const ft = player.freeThrowRate / 2.1;
   const foulRate =
     defense
       .map((player) => player.foulRate)
@@ -560,12 +569,13 @@ function genIsFoul(
     ft / (player.threePointAttemptRate + player.twoPointAttemptRate);
   if (shotType == "two") {
     return (
-      Math.random() <
-      ftShotsPerFG * 1.2 + foulRate / 2 + foulRate * ftShotsPerFG
+      Math.random() < ftShotsPerFG + foulRate / 2 + foulRate * ftShotsPerFG
     );
   } else {
-    // console.log(foulRate);
-    return Math.random() < ftShotsPerFG / 1.8 + foulRate / 3;
+    return (
+      Math.random() <
+      (ftShotsPerFG + foulRate / 2 + foulRate * ftShotsPerFG) / 2.5
+    );
   }
 }
 

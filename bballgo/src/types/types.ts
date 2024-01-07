@@ -291,6 +291,7 @@ export type ShotAttempt = {
 
 export enum PossessionOutcome {
   Turnover = "Turnover",
+  Steal = "Steal",
   MadeTwoPointShot = "MadeTwoPointShot",
   MadeThreePointShot = "MadeThreePointShot",
   MadeFreeThrow = "MadeFreeThrow",

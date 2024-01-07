@@ -84,6 +84,15 @@ const RandomPlusMinus = () => {
                 backgroundColor: "#82f2f2",
               }}
             >
+              Team
+            </th>
+            <th
+              style={{
+                border: "1px solid #ddd",
+                padding: "8px",
+                backgroundColor: "#82f2f2",
+              }}
+            >
               Name
             </th>
             <th
@@ -243,11 +252,11 @@ const RandomPlusMinus = () => {
         </thead>
         <tbody>
           {players?.map((player) => {
-            const per36Multiplier = player.stats.mins
-              ? 36 / player.stats.mins
-              : 0;
             return (
               <tr key={player.ratings.rID}>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {player.teamAbbr}
+                </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                   {player.name}
                 </td>
@@ -277,54 +286,68 @@ const RandomPlusMinus = () => {
                   {player.stats.mins.toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.points * per36Multiplier).toFixed(1)}
+                  {((player.stats.points * 200) / player.stats.poss).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                   {(
-                    (player.stats.offReb + player.stats.defReb) *
-                    per36Multiplier
+                    ((player.stats.offReb + player.stats.defReb) * 200) /
+                    player.stats.poss
                   ).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.assists * per36Multiplier).toFixed(1)}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.steals * per36Multiplier).toFixed(1)}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.blocks * per36Multiplier).toFixed(1)}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.turnovers * per36Multiplier).toFixed(1)}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.fouls * per36Multiplier).toFixed(1)}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.twoPointShotsTaken * per36Multiplier).toFixed(
+                  {((player.stats.assists * 200) / player.stats.poss).toFixed(
                     1
                   )}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.twoPointShotsMade * per36Multiplier).toFixed(
+                  {((player.stats.steals * 200) / player.stats.poss).toFixed(1)}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {((player.stats.blocks * 200) / player.stats.poss).toFixed(1)}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {((player.stats.turnovers * 200) / player.stats.poss).toFixed(
                     1
                   )}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {((player.stats.fouls * 200) / player.stats.poss).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                   {(
-                    player.stats.threePointShotsTaken * per36Multiplier
+                    (player.stats.twoPointShotsTaken * 200) /
+                    player.stats.poss
                   ).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.threePointShotsMade * per36Multiplier).toFixed(
-                    1
-                  )}
+                  {(
+                    (player.stats.twoPointShotsMade * 200) /
+                    player.stats.poss
+                  ).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.freeThrowsTaken * per36Multiplier).toFixed(1)}
+                  {(
+                    (player.stats.threePointShotsTaken * 200) /
+                    player.stats.poss
+                  ).toFixed(1)}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {(player.stats.freeThrowsMade * per36Multiplier).toFixed(1)}
+                  {(
+                    (player.stats.threePointShotsMade * 200) /
+                    player.stats.poss
+                  ).toFixed(1)}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {(
+                    (player.stats.freeThrowsTaken * 200) /
+                    player.stats.poss
+                  ).toFixed(1)}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {(
+                    (player.stats.freeThrowsMade * 200) /
+                    player.stats.poss
+                  ).toFixed(1)}
                 </td>
               </tr>
             );
