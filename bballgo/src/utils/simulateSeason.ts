@@ -2,23 +2,49 @@ import { ScoreBoard, Team } from "../types/types";
 import { simulateGame } from "./simulateGame";
 
 const teamAbbrs = [
-    "ATL", "BOS", "BKN", "CHA", "CHI", "CLE", "DAL", "DEN", "DET", "GSW",
-    "HOU", "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK",
-    "OKC", "ORL", "PHI", "PHX", "POR", "SAC", "SAS", "TOR", "UTA", "WAS"
-  ];
+  "ATL",
+  "BOS",
+  "BKN",
+  "CHA",
+  "CHI",
+  "CLE",
+  "DAL",
+  "DEN",
+  "DET",
+  "GSW",
+  "HOU",
+  "IND",
+  "LAC",
+  "LAL",
+  "MEM",
+  "MIA",
+  "MIL",
+  "MIN",
+  "NOP",
+  "NYK",
+  "OKC",
+  "ORL",
+  "PHI",
+  "PHX",
+  "POR",
+  "SAC",
+  "SAS",
+  "TOR",
+  "UTA",
+  "WAS",
+];
 
-  
 //   function generateRandomSchedule(): [string, string][] {
 //     const totalGamesPerTeam = 82;
 //     const schedule: [string, string][] = [];
 //     const teamsWithGamesLeft = [...teamAbbrs]; // Clone the original array
 //     const gamesCount: { [team: string]: number } = {};
-  
+
 //     // Initialize games count
 //     teamAbbrs.forEach(team => {
 //       gamesCount[team] = 0;
 //     });
-  
+
 //     while (teamsWithGamesLeft.length > 1) {
 //       // Randomly pick two different teams
 //       const randomIndex1 = Math.floor(Math.random() * teamsWithGamesLeft.length);
@@ -26,15 +52,15 @@ const teamAbbrs = [
 //       while (randomIndex1 === randomIndex2) {
 //         randomIndex2 = Math.floor(Math.random() * teamsWithGamesLeft.length);
 //       }
-  
+
 //       const team1 = teamsWithGamesLeft[randomIndex1];
 //       const team2 = teamsWithGamesLeft[randomIndex2];
-  
+
 //       // Add the matchup to the schedule
 //       schedule.push([team1, team2]);
 //       gamesCount[team1]++;
 //       gamesCount[team2]++;
-  
+
 //       // Remove teams that have reached 82 games
 //       if (gamesCount[team1] === totalGamesPerTeam) {
 //         teamsWithGamesLeft.splice(randomIndex1, 1);
@@ -47,73 +73,70 @@ const teamAbbrs = [
 //     return schedule;
 //   }
 
-  function generateFixedSchedule(): [string, string][] {
-    const totalRounds = 2;
-    const schedule: [string, string][] = [];
-  
-    // Generate each unique matchup
-    for (let i = 0; i < teamAbbrs.length; i++) {
-      for (let j = i + 1; j < teamAbbrs.length; j++) {
-        const team1 = teamAbbrs[i];
-        const team2 = teamAbbrs[j];
-  
-        // Add this matchup to the schedule for each round
-        for (let round = 0; round < totalRounds; round++) {
-          schedule.push([team1, team2]);
-        }
+function generateFixedSchedule(): [string, string][] {
+  const totalRounds = 2;
+  const schedule: [string, string][] = [];
+
+  // Generate each unique matchup
+  for (let i = 0; i < teamAbbrs.length; i++) {
+    for (let j = i + 1; j < teamAbbrs.length; j++) {
+      const team1 = teamAbbrs[i];
+      const team2 = teamAbbrs[j];
+
+      // Add this matchup to the schedule for each round
+      for (let round = 0; round < totalRounds; round++) {
+        schedule.push([team1, team2]);
       }
     }
-
-    return schedule;
   }
-  
-  
 
-  export function runRPM(teams: Team[], seasons: number): ScoreBoard[] {
-    let scoreBoards: ScoreBoard[] = [];
-    // const teamNames = teamAbbrs.filter((abbr) => abbr.length > 1);
-    let players = teams.flatMap(team => team.roster);
-    teams = teams.filter((team) => team.teamAbbreviation.length > 2);
+  return schedule;
+}
 
-    for (let runs = 0; runs < seasons; runs++){
-      console.log("SIM SEASON", runs);
-      // Step 2: Shuffle the players array
-      players = teams.flatMap(team => team.roster);
-      for (let i = players.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [players[i], players[j]] = [players[j], players[i]];
-      }
+export function runRPM(teams: Team[], seasons: number): ScoreBoard[] {
+  let scoreBoards: ScoreBoard[] = [];
+  // const teamNames = teamAbbrs.filter((abbr) => abbr.length > 1);
+  let players = teams.flatMap((team) => team.roster);
+  teams = teams.filter((team) => team.teamAbbreviation.length > 2);
 
-      // Step 3: Assign players to teams
-      teams.forEach(team => {
-        const rosterSize = team.roster.length;
-        team.roster = players.splice(0, rosterSize);
-      });
-      scoreBoards = scoreBoards.concat(runSeason(teams));
+  for (let runs = 0; runs < seasons; runs++) {
+    console.log("SIM SEASON", runs);
+    // Step 2: Shuffle the players array
+    players = teams.flatMap((team) => team.roster);
+    for (let i = players.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [players[i], players[j]] = [players[j], players[i]];
     }
 
-    return scoreBoards
-
-  }
-
-  export function runSeason(teams: Team[]): ScoreBoard[] {
-    const nbaSchedule = generateFixedSchedule();
-    const boxScores: (ScoreBoard | undefined)[] = [];
-    nbaSchedule.forEach(([homeTeamAbbr, awayTeamAbbr]) => {
-      // Find the corresponding team objects for home and away teams
-      const homeTeam = teams.find(team => team.teamAbbreviation === homeTeamAbbr);
-      const awayTeam = teams.find(team => team.teamAbbreviation === awayTeamAbbr);
-  
-      if (homeTeam && awayTeam) {
-        // Simulate the game
-        const gameResult = simulateGame(homeTeam.roster, awayTeam.roster);
-        boxScores.push(gameResult);
-      }
+    // Step 3: Assign players to teams
+    teams.forEach((team) => {
+      const rosterSize = team.roster.length;
+      team.roster = players.splice(0, rosterSize);
     });
-
-  
-    return boxScores as ScoreBoard[]; // This array contains the box scores of all the games
+    scoreBoards = scoreBoards.concat(runSeason(teams));
   }
-  
 
-  
+  return scoreBoards;
+}
+
+export function runSeason(teams: Team[]): ScoreBoard[] {
+  const nbaSchedule = generateFixedSchedule();
+  const boxScores: (ScoreBoard | undefined)[] = [];
+  nbaSchedule.forEach(([homeTeamAbbr, awayTeamAbbr]) => {
+    // Find the corresponding team objects for home and away teams
+    const homeTeam = teams.find(
+      (team) => team.teamAbbreviation === homeTeamAbbr
+    );
+    const awayTeam = teams.find(
+      (team) => team.teamAbbreviation === awayTeamAbbr
+    );
+
+    if (homeTeam && awayTeam) {
+      // Simulate the game
+      const gameResult = simulateGame(homeTeam.roster, awayTeam.roster);
+      boxScores.push(gameResult);
+    }
+  });
+
+  return boxScores as ScoreBoard[]; // This array contains the box scores of all the games
+}

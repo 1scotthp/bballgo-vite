@@ -1,7 +1,12 @@
 import { Player } from "../types/types";
 
-const FIRST_APRON = 168998000;
-const TAX_LINE = 150267000;
+
+
+// const CAP = 142000000; // Cap for the 2024-25 season: $142 million
+const TAX_LINE = 172500000; // Tax line for the 2024-25 season: $172.5 million
+const FIRST_APRON = 179900000; // First apron for the 2024-25 season: $179.9 million
+// const SECOND_APRON = 190800000; // Second apron for the 2024-25 season: $190.8 million
+
 
 type TradeInfo = {
     currentSalary: number;
@@ -10,12 +15,11 @@ type TradeInfo = {
     isTaxTeam: boolean;
   };
   
-  function isTradeLegal({ currentSalary, outgoingSalary, incomingSalary, isTaxTeam }: TradeInfo): boolean {
+  export function isTradeLegal({ currentSalary, outgoingSalary, incomingSalary, isTaxTeam }: TradeInfo): boolean {
     let maxIncomingSalary = 0;
   
     if (currentSalary > FIRST_APRON) {
-      // Teams above the apron are locked into the lowest level of salary matching
-      maxIncomingSalary = outgoingSalary * 1.1; // 110 percent
+      return outgoingSalary >= incomingSalary
     } else {
       // Below the apron
       if (outgoingSalary <= 7250000) {
@@ -41,6 +45,10 @@ type TradeInfo = {
   
     return incomingSalary <= maxIncomingSalary;
   }
+
+//   function isTradeLegalOverFirstApron({ currentSalary, outgoingSalary, incomingSalary, isTaxTeam }: TradeInfo){
+//     return outgoingSalary >= incomingSalary;
+//   }
 
   function willTeamAcceptTrade(team1Trade: Player[], team2Trade: Player[]): boolean {
     let team1DPM = 0;

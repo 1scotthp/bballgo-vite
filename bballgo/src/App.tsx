@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Playoffs from './pages/Playoffs'
 import Trade from './pages/trade';
 import RandomPlusMinus from './pages/RandomPlusMinus';
+import Game from './pages/Game';
 
 
 function App() {
@@ -38,7 +39,7 @@ function App() {
           <Router>
       <div>
         <nav>
-          <Link to="/">Home</Link> | <Link to="/win-loss">Standings</Link> | <Link to="/playoffs">Playoffs</Link>  | <Link to="/trade">Trade</Link> | <Link to="/rpm">RPM</Link>
+          <Link to="/">Home</Link> | <Link to="/win-loss">Standings</Link> | <Link to="/playoffs">Playoffs</Link>  | <Link to="/trade">Trade</Link> | <Link to="/rpm">RPM</Link> | <Link to="/game">Games</Link> 
           {/* Add more links for other routes */}
         </nav>
         <Routes>
@@ -47,6 +48,7 @@ function App() {
           <Route path="/playoffs" element={ <Playoffs/>} />
           <Route path="/trade" element={ <Trade/>} />
           <Route path="/rpm" element={ <RandomPlusMinus />} />
+          <Route path="/game" element={ <Game />} />
           {/* Define more routes as needed */}
         </Routes>
       </div>
