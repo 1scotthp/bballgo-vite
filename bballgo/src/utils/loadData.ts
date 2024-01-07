@@ -67,7 +67,7 @@ function parseCsvLine(line: string): string[] {
     let contracts: ContractAmounts = {};
   
     yearHeaders.forEach((year, index) => {
-      contracts[year] = convertMoneyStringToNumber(parts[index + 4]);
+      contracts[year] = isNaN(convertMoneyStringToNumber(parts[index + 4])) ? 0 :  convertMoneyStringToNumber(parts[index + 4]) ;
     });
   
     return new PlayerContract(team, player, age, contracts);
@@ -75,7 +75,6 @@ function parseCsvLine(line: string): string[] {
 
 async function parseInputData(inputData: string): Promise<PlayerContract[]> {
     const lines = inputData.trim().split('\n');
-    console.log(lines)
     let yearHeaders: string[] = [];
     let contracts: PlayerContract[] = [];
 
@@ -96,6 +95,8 @@ export const loadContractData = async () => {
     const csvData = await response.text();
     const contracts = await parseInputData(csvData);  // Parse the data
     const contractsMap = contracts.reduce((map, contract) => {
+
+        console.log(contract.name);
         map[contract.name] = {
           name: contract.name,
           team: contract.team,
@@ -190,6 +191,8 @@ const loadPlayerData = async (contractDict: any) => {
             losses: 0,
             margin: 0,
             poss: 0,
+          }, rosterInfo: {
+            salary: 0,
           } };
         }
         teams[teamAbbr].roster.push(player);
@@ -204,6 +207,7 @@ const loadPlayerData = async (contractDict: any) => {
 
 export const loadData = async () => {
     const contractDict = await loadContractData();
+    console.log(contractDict["Nikola Jokic"])
     await loadPlayerData(contractDict)
 
 }

@@ -89,10 +89,15 @@ export interface HeadCell<T> {
     margin: number,
     poss: number
  }
+
+ export type RosterInfo = {
+   salary: number
+ }
   
   export type Team = {
     roster: Player[];
     stats: TeamsStandingStats;
+    rosterInfo: RosterInfo
     teamName?: string;
     teamId?: number;
     teamAbbreviation: string;

@@ -10,7 +10,8 @@ type SeasonData = {
     tradePlayers: (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => void,
     userTeam: string,
     rapm: Record<string, number>,
-    setRapm: (r: Record<string, number>) => void
+    setRapm: (r: Record<string, number>) => void,
+    year: string
   };
   
   export const TeamsContext = createContext<SeasonData>({
@@ -22,6 +23,7 @@ type SeasonData = {
     userTeam: "MIL",
     rapm: {},
     setRapm: () => {},
+    year: "2022-23"
   });
   
   
@@ -34,6 +36,7 @@ type TeamsProviderProps = {
     const [boxScores, setBoxScores] = useState<ScoreBoard[]>([]);
     const [userTeam, _] = useState<string>("MIL")
     const [rapm, setRapm] = useState<Record<string, number>>({})
+    const [year, _1] = useState<string>("2022-23");
 
   
     useEffect(() => {
@@ -73,6 +76,8 @@ type TeamsProviderProps = {
       };
 
     const tradePlayers = (team1Abbr: string, team1Players: string[], team2Abbr: string, team2Players: string[]) => {
+        
+        
         const newTeams = teams.map(team => {
           if (team.teamAbbreviation === team1Abbr) {
             // Update team1 roster and traded players' teamAbbreviation
@@ -100,7 +105,7 @@ type TeamsProviderProps = {
       
     
       return (
-        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers, rapm, setRapm , setTeams}}>
+        <TeamsContext.Provider value={{ teams, boxScores, updateBoxScores, userTeam, tradePlayers, rapm, setRapm , setTeams, year}}>
           {children}
         </TeamsContext.Provider>
       );

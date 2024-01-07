@@ -95,15 +95,10 @@ const teamAbbrs = [
     return scoreBoards
 
   }
-  
 
   export function runSeason(teams: Team[]): ScoreBoard[] {
     const nbaSchedule = generateFixedSchedule();
     const boxScores: (ScoreBoard | undefined)[] = [];
-
-    console.log("TEAMS", teams.length)
-  
-
     nbaSchedule.forEach(([homeTeamAbbr, awayTeamAbbr]) => {
       // Find the corresponding team objects for home and away teams
       const homeTeam = teams.find(team => team.teamAbbreviation === homeTeamAbbr);
