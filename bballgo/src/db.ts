@@ -1,6 +1,6 @@
 // db.ts
 import Dexie, { Table } from "dexie";
-import { Player, PlayerStats, Team } from "./types/types";
+import { Player, Team } from "./types/types";
 import { Contract } from "./utils/loadData";
 
 export interface Friend {
