@@ -29,40 +29,42 @@ const Standings = () => {
           </tr>
         </thead>
         <tbody>
-          {teams.map((team) => (
-            <tr key={team.teamAbbreviation}>
-              <td style={{ width: "150px" }}>
-                {team.teamName || team.teamAbbreviation}
-              </td>
-              <td style={{ width: "100px" }}>
-                {(
-                  ((team.stats?.totalPoints - team.stats?.totalOppPoints) *
-                    200) /
-                  team.stats?.poss
-                ).toFixed(1)}
-              </td>
-              <td style={{ width: "60px" }}>{team.stats?.wins}</td>
-              <td style={{ width: "60px" }}>{team.stats?.losses}</td>
-              <td style={{ width: "100px" }}>
-                {((team.stats?.totalPoints * 200) / team.stats?.poss).toFixed(
-                  1
-                )}
-              </td>
-              <td style={{ width: "180px" }}>
-                {(
-                  (team.stats?.totalOppPoints * 200) /
-                  team.stats?.poss
-                ).toFixed(1)}
-              </td>
-              <td style={{ width: "60px" }}>
-                {(
-                  team.stats?.poss /
-                  (team.stats?.wins + team.stats?.losses) /
-                  2
-                ).toFixed(1)}
-              </td>
-            </tr>
-          ))}
+          {teams
+            .sort((a, b) => b.stats?.margin - a?.stats?.margin)
+            .map((team) => (
+              <tr key={team.teamAbbreviation}>
+                <td style={{ width: "150px" }}>
+                  {team.teamName || team.teamAbbreviation}
+                </td>
+                <td style={{ width: "100px" }}>
+                  {(
+                    ((team.stats?.totalPoints - team.stats?.totalOppPoints) *
+                      200) /
+                    team.stats?.poss
+                  ).toFixed(1)}
+                </td>
+                <td style={{ width: "60px" }}>{team.stats?.wins}</td>
+                <td style={{ width: "60px" }}>{team.stats?.losses}</td>
+                <td style={{ width: "100px" }}>
+                  {((team.stats?.totalPoints * 200) / team.stats?.poss).toFixed(
+                    1
+                  )}
+                </td>
+                <td style={{ width: "180px" }}>
+                  {(
+                    (team.stats?.totalOppPoints * 200) /
+                    team.stats?.poss
+                  ).toFixed(1)}
+                </td>
+                <td style={{ width: "60px" }}>
+                  {(
+                    team.stats?.poss /
+                    (team.stats?.wins + team.stats?.losses) /
+                    2
+                  ).toFixed(1)}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

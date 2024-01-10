@@ -161,6 +161,8 @@ export type PlayByPlayPoss = {
   timeRemaining: number;
   play: string;
   quarter: number;
+  score?: number;
+  score2?: number;
 };
 
 export type ScoreBoard = {

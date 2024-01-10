@@ -182,13 +182,13 @@ export function simulateGame(
   let posCount = 0;
   let prevPossessionEnd = PossessionStart.Timeout;
   let points = 0;
-  let points2 = 0;
 
   scoreBoard.quarter = 1;
   while (scoreBoard.quarter <= 4) {
     scoreBoard.timeRemaining = 720;
     while (scoreBoard.timeRemaining > 0) {
       let possessionLength = 0;
+      points = 0;
 
       const offense = home_team_has_possession ? homeOnCourt : awayOnCourt;
       const defense = home_team_has_possession ? awayOnCourt : homeOnCourt;
@@ -204,22 +204,23 @@ export function simulateGame(
       );
       posCount += 1;
 
-      points2 = 0;
       while (
         prevPossessionEnd === PossessionStart.Oreb ||
         prevPossessionEnd === PossessionStart.DefFoulFloor
       ) {
-        [prevPossessionEnd, points2] = simulatePossession(
-          homeOnCourt,
-          awayOnCourt,
+        const [prevPossession, p] = simulatePossession(
+          offense,
+          defense,
           weights,
           scoreBoard,
           prevPossessionEnd
         );
+        points += p;
+        prevPossessionEnd = prevPossession;
+
         possessionLength +=
           simulatePossessionTime(prevPossessionEnd) * weights.POSS_LENGTH;
       }
-      points += points2;
 
       offense.forEach((player) => {
         scoreBoard.boxScore[player.name].teamPointsScored += points;
@@ -398,6 +399,7 @@ function simulatePossession(
   const shotAttemptProb =
     1 - turnoverProb - offensiveFoulProb - defensiveFoulFloorProb;
 
+  // const i = getIndexFromWeights([0, 0, 0, 0, shotAttemptProb]);
   const i = getIndexFromWeights([
     defensiveFoulFloorProb,
     turnoverProb,
@@ -414,6 +416,13 @@ function simulatePossession(
     null,
   ][i];
 
+  let team1Score = 0;
+  let team2Score = 0;
+  Object.values(scoreBoard.boxScore).map((p) => (team1Score += p.points));
+  Object.values(scoreBoard.boxScore).map(
+    (p) => (team2Score += p.teamPointsScored / 5)
+  );
+
   if (outcome === PossessionOutcome.DefensiveFoul) {
     const defensivePlayer =
       defensiveTeam[
@@ -428,6 +437,8 @@ function simulatePossession(
         possessionEndingPlayer.name +
         " on the floor",
       timeRemaining: scoreBoard.timeRemaining,
+      score2: team2Score,
+      score: team1Score,
     });
     return [PossessionStart.DefFoulFloor, 0];
   } else if (outcome === PossessionOutcome.Turnover) {
@@ -436,6 +447,8 @@ function simulatePossession(
       quarter: scoreBoard.quarter,
       play: "Turnover by  " + possessionEndingPlayer.name,
       timeRemaining: scoreBoard.timeRemaining,
+      score2: team2Score,
+      score: team1Score,
     });
     return [PossessionStart.DeadBall, 0];
   } else if (outcome === PossessionOutcome.Steal) {
@@ -449,6 +462,8 @@ function simulatePossession(
         defensivePlayer +
         ". Turnover by " +
         possessionEndingPlayer.name,
+      score2: team2Score,
+      score: team1Score,
       timeRemaining: scoreBoard.timeRemaining,
     });
     return [PossessionStart.Steal, 0];
@@ -459,6 +474,8 @@ function simulatePossession(
       quarter: scoreBoard.quarter,
       play: "Offensive foul on  " + possessionEndingPlayer.name,
       timeRemaining: scoreBoard.timeRemaining,
+      score2: team2Score,
+      score: team1Score,
     });
     return [PossessionStart.DeadBall, 0];
   } else {
@@ -477,6 +494,8 @@ function simulatePossession(
         play:
           possessionEndingPlayer.name + " shot blocked by " + defensivePlayer,
         timeRemaining: scoreBoard.timeRemaining,
+        score2: team2Score,
+        score: team1Score,
       });
       return [PossessionStart.Miss, 0];
     }
@@ -485,7 +504,9 @@ function simulatePossession(
       defensiveTeam,
       possessionEndingIndex,
       scoreBoard,
-      prevPossessionEnd
+      prevPossessionEnd,
+      team1Score,
+      team2Score
     );
 
     if (outcome === PossessionStart.Miss) {
@@ -501,7 +522,7 @@ function simulatePossession(
       const adj = (oreb - dreb) / 2 + (ODPM - DDPM) / 50;
 
       const is_oreb =
-        Math.random() < (adj / 50) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE * 0;
+        Math.random() < (adj / 50) * REBOUNDING_MULTIPLIER + OFF_REB_CHANCE;
 
       if (is_oreb) {
         // play by play here
@@ -510,18 +531,22 @@ function simulatePossession(
           quarter: scoreBoard.quarter,
           play: "Offensive rebound by  " + rebounder,
           timeRemaining: scoreBoard.timeRemaining,
+          score2: team2Score,
+          score: team1Score,
         });
         scoreBoard.boxScore[rebounder].offReb += 1;
-        return [PossessionStart.Oreb, 0];
+        return [PossessionStart.Oreb, points];
       } else {
         const rebounder = genDefensiveRebounder(defensiveTeam);
         scoreBoard.playByPlay.push({
           quarter: scoreBoard.quarter,
           play: "Defensive rebound by  " + rebounder,
           timeRemaining: scoreBoard.timeRemaining,
+          score2: team2Score,
+          score: team1Score,
         });
         scoreBoard.boxScore[rebounder].defReb += 1;
-        return [PossessionStart.Miss, 0];
+        return [PossessionStart.Miss, points];
       }
     } else {
       const isAssist = genIsAssist(weights);
@@ -589,7 +614,6 @@ function takeFreeThrows(
   let res = "";
   while (numFreeThrows > 0) {
     if (Math.random() < player.freeThrowPercentage) {
-      scoreBoard.boxScore[player.name].points += 1;
       scoreBoard.boxScore[player.name].freeThrowsMade += 1;
       points += 1;
       outcome = PossessionStart.Make;
@@ -606,6 +630,8 @@ function takeFreeThrows(
     scoreBoard.boxScore[player.name].freeThrowsTaken += 1;
     numFreeThrows -= 1;
   }
+
+  scoreBoard.boxScore[player.name].points += points;
   return [outcome, points];
 }
 
@@ -618,7 +644,9 @@ function takeShot(
   prevPossessionEnd: PossessionStart,
   ODPM: number, // average DPM
   DDPM: number,
-  ast: number // team assists per possession above average
+  ast: number, // team assists per possession above average
+  score1: number,
+  score2: number
 ): [PossessionStart, number] {
   const foulPenalty = isFoul ? 0.3 : 1;
   let possessionConst = 1;
@@ -660,12 +688,16 @@ function takeShot(
         quarter: scoreBoard.quarter,
         play: player.name + " made 2pt shot",
         timeRemaining: scoreBoard.timeRemaining,
+        score2: score2,
+        score: score1,
       });
       if (isFoul) {
         scoreBoard.playByPlay.push({
           quarter: scoreBoard.quarter,
           play: player.name + " fouled on 2 by " + fouler,
           timeRemaining: scoreBoard.timeRemaining,
+          score2: score2,
+          score: score1,
         });
         scoreBoard.boxScore[fouler].fouls += 1;
         const [outcome, points] = takeFreeThrows(player, 1, scoreBoard);
@@ -677,12 +709,16 @@ function takeShot(
         quarter: scoreBoard.quarter,
         play: player.name + " missed 2pt shot",
         timeRemaining: scoreBoard.timeRemaining,
+        score2: score2,
+        score: score1,
       });
       if (isFoul) {
         scoreBoard.playByPlay.push({
           quarter: scoreBoard.quarter,
           play: player.name + " fouled on 2 by " + fouler,
           timeRemaining: scoreBoard.timeRemaining,
+          score2: score2,
+          score: score1,
         });
         scoreBoard.boxScore[fouler].fouls += 1;
         return takeFreeThrows(player, 2, scoreBoard);
@@ -697,14 +733,16 @@ function takeShot(
       Math.random() <
       player.threePointPercentage * foulPenalty * possessionConst
     ) {
+      scoreBoard.boxScore[player.name].points += 3;
       scoreBoard.playByPlay.push({
         quarter: scoreBoard.quarter,
         play: player.name + " made 3pt shot",
         timeRemaining: scoreBoard.timeRemaining,
+        score2: score2,
+        score: score1,
       });
       scoreBoard.boxScore[player.name].threePointShotsTaken += 1;
       scoreBoard.boxScore[player.name].threePointShotsMade += 1;
-      scoreBoard.boxScore[player.name].points += 3;
       if (isFoul) {
         const [outcome, points] = takeFreeThrows(player, 1, scoreBoard);
         return [outcome, 3 + points];
@@ -736,7 +774,9 @@ function simulateShot(
   defensiveTeam: PlayerRatings[],
   possessionEndingIndex: number,
   scoreBoard: ScoreBoard,
-  prevPossessionEnd: PossessionStart
+  prevPossessionEnd: PossessionStart,
+  score1: number,
+  score2: number
 ): [PossessionStart, number] {
   const player = offensiveTeam[possessionEndingIndex];
 
@@ -773,7 +813,9 @@ function simulateShot(
     prevPossessionEnd,
     ODPM,
     DDPM,
-    OAST
+    OAST,
+    score1,
+    score2
   );
 }
 

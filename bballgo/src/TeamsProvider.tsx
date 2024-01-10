@@ -1,11 +1,12 @@
 import { ReactNode, createContext, useEffect, useState } from "react";
-import { db } from "./db";
+// import { db } from "./db";
 import {
   PlayerBoxScore,
   ScoreBoard,
   Team,
   TeamsStandingStats,
 } from "./types/types";
+import { loadData } from "./utils/loadData";
 
 type SeasonData = {
   teams: Team[];
@@ -19,8 +20,6 @@ type SeasonData = {
     team2Players: string[]
   ) => void;
   userTeam: string;
-  rapm: Record<string, number>;
-  setRapm: (r: Record<string, number>) => void;
   year: string;
 };
 
@@ -31,30 +30,27 @@ export const TeamsContext = createContext<SeasonData>({
   updateBoxScores: () => {},
   tradePlayers: ([], []) => {},
   userTeam: "MIL",
-  rapm: {},
-  setRapm: () => {},
   year: "2022-23",
 });
 
 type TeamsProviderProps = {
   children: ReactNode;
+  initialTeams: Team[];
 };
 
-export const TeamsProvider: React.FC<TeamsProviderProps> = ({ children }) => {
-  const [teams, setTeams] = useState<Team[]>([]);
+export const TeamsProvider: React.FC<TeamsProviderProps> = ({
+  children,
+  initialTeams,
+}) => {
+  const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [boxScores, setBoxScores] = useState<ScoreBoard[]>([]);
   const [userTeam, _] = useState<string>("MIL");
-  const [rapm, setRapm] = useState<Record<string, number>>({});
   const [year, _1] = useState<string>("2022-23");
 
   useEffect(() => {
-    const fetchTeams = async () => {
-      const allTeams = await db.teams.toArray();
-      setTeams(allTeams);
-    };
-    if (teams.length === 0) {
-      fetchTeams().catch(console.error);
-    }
+    loadData().then((a) =>
+      setTeams(a.filter((team) => team.teamAbbreviation.length > 1))
+    );
   }, []);
 
   const updateBoxScores = (newBoxScores: ScoreBoard[]) => {
@@ -127,8 +123,6 @@ export const TeamsProvider: React.FC<TeamsProviderProps> = ({ children }) => {
         updateBoxScores,
         userTeam,
         tradePlayers,
-        rapm,
-        setRapm,
         setTeams,
         year,
       }}
@@ -158,13 +152,11 @@ export function calculateGameResult(scoreBoard: ScoreBoard): {
 
   // Determine winner and loser
   const teams = Object.keys(teamScores);
-  const winner = teams[0];
-  const loser = teams[1];
   const isTeam1Winner = teamScores[teams[0]] > teamScores[teams[1]];
 
   return {
-    winner: isTeam1Winner ? winner : loser,
-    loser: isTeam1Winner ? loser : winner,
+    winner: isTeam1Winner ? teams[0] : teams[1],
+    loser: isTeam1Winner ? teams[1] : teams[0],
     scores: teamScores,
     poss: possCount,
   };

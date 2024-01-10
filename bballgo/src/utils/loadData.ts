@@ -1,4 +1,4 @@
-import { db } from "../db";
+// import { db } from "../db";
 import contractsCSV from "../data/NBA_Contracts_Player.csv?url";
 import playerCSV from "../data/NBA_Player_Data_22_23.csv?url";
 import { Player, PlayerRatings, Team } from "../types/types";
@@ -119,7 +119,6 @@ const loadContractData = async () => {
 
   // await db.contracts.bulkPut(formattedContracts);  // Store in the database
 };
-export default loadContractData;
 
 const loadPlayerData = async (contractDict: any) => {
   // Dictionary to hold teams and their players
@@ -215,12 +214,13 @@ const loadPlayerData = async (contractDict: any) => {
 
   const teamValues = Object.values(teams);
   console.log(teamValues);
-  console.log(await db.tables);
-  await db.teams.bulkPut(teamValues);
+  return teamValues;
+  // console.log(await db.tables);
+  // await db.teams.bulkPut(teamValues);
 };
 
 export const loadData = async () => {
   const contractDict = await loadContractData();
   console.log(contractDict["Nikola Jokic"]);
-  await loadPlayerData(contractDict);
+  return await loadPlayerData(contractDict);
 };

@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { TeamsContext } from "../TeamsProvider";
 
 const TeamInfoPage = () => {
-  const { teams, userTeam, rapm } = useContext(TeamsContext);
+  const { teams, userTeam } = useContext(TeamsContext);
   const [selectedTeamAbbr, setSelectedTeamAbbr] = useState(userTeam);
 
   const handleTeamSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -273,13 +273,13 @@ const TeamInfoPage = () => {
                       </td>
                       <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                         {(
-                          (player.stats.teamPointsScored * 100) /
+                          (player.stats.teamPointsScored * 200) /
                           player.stats.poss
                         ).toFixed(1)}
                       </td>
                       <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                         {(
-                          (player.stats.teamPointsAgainst * 100) /
+                          (player.stats.teamPointsAgainst * 200) /
                           player.stats.poss
                         ).toFixed(1)}
                       </td>
@@ -287,12 +287,9 @@ const TeamInfoPage = () => {
                         {(
                           ((player.stats.teamPointsScored -
                             player.stats.teamPointsAgainst) *
-                            100) /
+                            200) /
                           player.stats.poss
                         ).toFixed(1)}
-                      </td>
-                      <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        {rapm[player.name]}
                       </td>
                     </tr>
                   );

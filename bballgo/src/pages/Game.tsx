@@ -19,12 +19,10 @@ const Game = () => {
 
   const [team1Name, team2Name] = Array.from(teamNames);
   const team1: PlayerBoxScore[] = players.filter(
-    (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team1Name && playerBoxScore.mins
+    (playerBoxScore) => playerBoxScore.teamAbbr === team1Name
   );
   const team2: PlayerBoxScore[] = players.filter(
-    (playerBoxScore) =>
-      playerBoxScore.teamAbbr === team2Name && playerBoxScore.mins
+    (playerBoxScore) => playerBoxScore.teamAbbr === team2Name
   );
 
   let team1Score = 0;
@@ -33,7 +31,9 @@ const Game = () => {
   team2.map((p) => (team2Score += p.teamPointsScored));
 
   let team1Score2 = 0;
+  let team2Score2 = 0;
   team1.map((p) => (team1Score2 += p.points));
+  team2.map((p) => (team2Score2 += p.points));
 
   return (
     <div>
@@ -43,7 +43,7 @@ const Game = () => {
       <div style={{ display: "flex", justifyContent: "space-around" }}>
         <div>
           {team1Name}: {team1Score / 5} OR {team1Score2} ----- {team2Name} :{" "}
-          {team2Score / 5}
+          {team2Score / 5} OR {team2Score2}
           <StatsTable players={team1} />
           <StatsTable players={team2} />
         </div>
@@ -54,7 +54,7 @@ const Game = () => {
           {playByPlay.map((play, index) => (
             <div key={index}>
               {genTimeString(play.quarter, play.timeRemaining)}
-              {"  "} {play.play}
+              {"  "} {play.play} {play.score} {play.score2}
             </div>
           ))}
         </div>
